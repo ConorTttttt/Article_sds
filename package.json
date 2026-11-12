@@ -1,0 +1,11 @@
+{
+  "name": "eu-article-sds-assessor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic EU REACH article and SDS legal decision support",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm test && node --check src/app.mjs && node --check src/rules.mjs"
+  }
+}
