@@ -99,12 +99,12 @@ test("Article 7(2) only covers relevant qualifying articles", () => {
   assert.equal(status("article7_2",{articleComponents:[a,b]}),"NOT_REQUIRED");
 });
 test("registered-for-use exemption does not eliminate Article 33", () => {
-  const c=withSubstance({registeredForUse:"yes"});
+  const c=withSubstance({registeredForUse:"yes",registrationEvidenceId:"REG-001",registeredUseDescription:"Use in article part-A"});
   assert.equal(status("article7_2",{articleComponents:[c]}),"NOT_REQUIRED");
   assert.equal(status("article33",{articleComponents:[c]}),"REQUIRED");
 });
 test("pre-Candidate List production-only scenario is not an automatic notification", () => {
-  const c=withSubstance({preListingOnly:"yes"});
+  const c=withSubstance({preListingOnly:"yes",preListingEvidenceId:"PRODUCTION-2024",listingDate:"2025-01-01",latestProductionImportDate:"2024-12-31"});
   assert.equal(status("article7_2",{articleComponents:[c]}),"NOT_REQUIRED");
 });
 test("exclusion of exposure without recipient instructions cannot be assumed", () => {
@@ -112,7 +112,7 @@ test("exclusion of exposure without recipient instructions cannot be assumed", (
   assert.equal(status("article7_2",{articleComponents:[c]}),"REVIEW_REQUIRED");
 });
 test("documented exposure exclusion and instructions can exempt notification", () => {
-  const c=withSubstance({exposureExcluded:"yes",recipientInstructionsProvided:"yes"});
+  const c=withSubstance({exposureExcluded:"yes",recipientInstructionsProvided:"yes",exposureEvidenceId:"LIFECYCLE-001"});
   assert.equal(status("article7_2",{articleComponents:[c]}),"NOT_REQUIRED");
 });
 test("mixed exemptions per substance require review", () => {
@@ -138,7 +138,7 @@ test("Article 7(1) is not dependent on Candidate List snapshot", () => {
   assert.equal(status("article7_1",{articleAssessment:{candidateListSnapshot:null},articleComponents:[c]}),"NOT_REQUIRED");
 });
 test("Article 7(1) registered-for-use exemption handled separately", () => {
-  const c=withSubstance({candidateList:"no", intendedRelease:"yes",registeredForUse:"yes"});
+  const c=withSubstance({candidateList:"no", intendedRelease:"yes",registeredForUse:"yes",registrationEvidenceId:"REG-1",registeredUseDescription:"Use in article fastening"});
   assert.equal(status("article7_1",{articleComponents:[c]}),"NOT_REQUIRED");
 });
 test("unknown intended-release status blocks negative Article 7(1)", () => {
@@ -170,4 +170,21 @@ test("rule catalog threshold and bindings are canonical", () => {
   assert.deepEqual(ARTICLE_KNOWLEDGE.rules.map(r=>r.id),source.rules.map(r=>r.id));
   assert.equal(ARTICLE_THRESHOLDS.candidate_list_w_w_percent.operator,">");
   assert.equal(ARTICLE_THRESHOLDS.article_7_tonnes_per_year.value,1);
+});
+
+test("Article 7(2) registered-for-use claim without specific evidence requires review", () => {
+  const c=withSubstance({registeredForUse:"yes"});
+  assert.equal(status("article7_2",{articleComponents:[c]}),"REVIEW_REQUIRED");
+});
+test("Article 7(2) pre-listing-only assertion without dated evidence requires review", () => {
+  const c=withSubstance({preListingOnly:"yes"});
+  assert.equal(status("article7_2",{articleComponents:[c]}),"REVIEW_REQUIRED");
+});
+test("Article 7(2) exposure-exclusion claim requires specific evidence", () => {
+  const c=withSubstance({exposureExcluded:"yes",recipientInstructionsProvided:"yes"});
+  assert.equal(status("article7_2",{articleComponents:[c]}),"REVIEW_REQUIRED");
+});
+test("Article 33 needs an EU supplier/supply context", () => {
+  assert.equal(status("article33",{articleAssessment:{placedOnEUMarket:"unknown"}}),"REVIEW_REQUIRED");
+  assert.equal(status("article33",{articleAssessment:{placedOnEUMarket:"no"}}),"NOT_APPLICABLE");
 });
