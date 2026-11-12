@@ -31,12 +31,13 @@ The Article 33 communication assessment is **separate** from SDS status.
 
 1. **REACH Article 3(3):** Article identification must be based on whether shape, surface or design determines function more than chemical composition. The UI asks for a **user-supported classification**: it does not automatically label an object an article.
 2. **REACH Article 31(1):** Hazardous substances/mixtures and PBT, vPvB or Candidate List substances can require an SDS.
-3. **REACH Annex II section 0.7:** SDSs are also required for the CLP Annex I 1.3 labelling-derogation special cases. The assessor asks this explicitly; an unknown answer blocks a negative decision.
-4. **REACH Article 31(3):** For non-hazard-classified mixtures, the tool screens *individual* ingredient concentrations for request-only SDS duties: ordinary human-health/environmental hazard `>=1% w/w` non-gas or `>=0.2% v/v` gas; specified special hazards `>=0.1% w/w` non-gas; Union workplace exposure limits. Certain CLP endocrine-disruptor category 2 mixture request notes (`>=0.1%`) are included. The user must confirm that all ingredients, relevant classifications and specific limits were reviewed for a negative result.
-5. **REACH Article 31(4):** General-public supply where adequate safe-use information is available may not need automatic SDS delivery; downstream-user or distributor requests override the exception.
-6. **REACH Article 33:** A Candidate List SVHC **above** `0.1% w/w` of an **individual constituent article** triggers safe-use information (minimum: substance name) to business recipients and, on consumer request, a response within **45 days**.
-7. **Directive 2013/29/EU Article 11(3):** Vehicle pyrotechnic articles require an SDS for professional users, in the requested language.
-8. **Article plus chemical payload:** For a cartridge, wipe or similar combination, the chemical substance/mixture requires a **separate** SDS assessment. The engine does not assume the whole combination is exempt.
+3. **ECHA Guidance on requirements for substances in articles (Version 4.0, June 2017):** Figure 2, Steps 1–6 now guide classification. The assessor requires an explicit description of the object's main function, plus a documented shape-vs-chemistry judgment. Where ambiguous, it asks ECHA's indicative container/carrier, integral-chemical, and further-processing questions. A missing, contradictory or tied result requires review; this guidance supports but does not replace the Article 3(3) legal test.
+4. **REACH Annex II section 0.7:** SDSs are also required for the CLP Annex I 1.3 labelling-derogation special cases. The assessor asks this explicitly; an unknown answer blocks a negative decision.
+5. **REACH Article 31(3):** For non-hazard-classified mixtures, the tool screens *individual* ingredient concentrations for request-only SDS duties: ordinary human-health/environmental hazard `>=1% w/w` non-gas or `>=0.2% v/v` gas; specified special hazards `>=0.1% w/w` non-gas; Union workplace exposure limits. Certain CLP endocrine-disruptor category 2 mixture request notes (`>=0.1%`) are included. The user must confirm that all ingredients, relevant classifications and specific limits were reviewed for a negative result.
+6. **REACH Article 31(4):** General-public supply where adequate safe-use information is available may not need automatic SDS delivery; downstream-user or distributor requests override the exception.
+7. **REACH Article 33:** A Candidate List SVHC **above** `0.1% w/w` of an **individual constituent article** triggers safe-use information (minimum: substance name) to business recipients and, on consumer request, a response within **45 days**. The optional reference-mass calculator follows ECHA Table 5 (pp. 33–36): constituent-article denominator by default, with a distinct joining/coating-complex-object exception. It calculates only from **retained** substance mass; evaporation and reaction losses must already be accounted for in evidence.
+8. **Directive 2013/29/EU Article 11(3):** Vehicle pyrotechnic articles require an SDS for professional users, in the requested language.
+9. **Article plus chemical payload:** For a cartridge, wipe or similar combination, the chemical substance/mixture requires a **separate** SDS assessment. The engine does not assume the whole combination is exempt.
 
 Source texts are linked directly in `src/rules.mjs`. The pinned baseline is **EU REACH consolidated 22 June 2026**, reviewed for this implementation on **12 November 2026**. `RULESET_VERSION` is part of every result.
 
@@ -46,6 +47,7 @@ Source texts are linked directly in `src/rules.mjs`. The pinned baseline is **EU
 - **No automatic CLP classification:** You must supply documented classification, ingredient identity, and Candidate List status. The tool does not retrieve ECHA live data or calculate mixture CLP hazard classification, harmonised classification, SCLs, M-factors or ATEs.
 - **Not all legislation covered:** REACH Article 2 exclusions/derogations, sector-specific law (e.g. medical, food, cosmetics, waste), national implementation, REACH Article 7 registration/notification, Article 32 communication, SCIP, Annex XVII restrictions, and other cases require separate assessment.
 - **Temporal validity:** The assessed legal rules are pinned, not updated automatically. Changes to CLP (including endocrine-disruptor transitional provisions), Annex II and REACH or the Candidate List may affect an assessment. Verify applicable effective dates and any transition rules for the item.
+- **Product classification gate:** A negative article SDS outcome requires a completed ECHA-guided Article 3(3) classification that matches the declared product type. It remains dependent on assessor-provided facts and competent judgment.
 - **Article 33 completeness:** The concentration threshold applies to each constituent article in complex objects. Checking only the weight of an assembled product is insufficient. User attestations of full coverage are not independently verified.
 - **Positive mixture screening is narrower than full classification:** All relevant hazard classes and specific concentration limits must be assessed by a competent classifier. A `NOT_REQUIRED` result is conditional on that input attestation, and should not be used as a substitute for a full legal/chemical assessment.
 - **SDS absence does not mean absence of safety duties:** Article 33, Article 32, Article 7 and other EU duties may still apply.
@@ -56,18 +58,20 @@ Source texts are linked directly in `src/rules.mjs`. The pinned baseline is **EU
 - [Directive 2013/29/EU, Article 11(3)](https://eur-lex.europa.eu/eli/dir/2013/29/oj/eng)
 - [Commission Regulation (EU) 2020/878, Annex II section 0.7](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32020R0878)
 - [Commission Delegated Regulation (EU) 2023/707 (CLP endocrine-disruptor classes)](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R0707)
+- [ECHA full Guidance on requirements for substances in articles, Version 4.0 (June 2017), Figure 2 and Table 5](https://echa.europa.eu/documents/10162/2324906/articles_en.pdf)
 - [ECHA Guidance in a Nutshell: Requirements for substances in articles (2017)](https://echa.europa.eu/documents/10162/2324906/nutshell_guidance_articles2_en.pdf)
 - [ECHA: Extended safety data sheets](https://echa.europa.eu/safety-data-sheets)
 
 ## Testing
 
-Run `node --test tests/*.test.mjs` on Node 20+ (or `npm test`). Tests cover SDS triggers, conditions, uncertain facts, and the 0.1% Article 33 boundary. GitHub Actions reruns the tests on pushes and pull requests.
+Run `node --test tests/*.test.mjs` on Node 20+ (or `npm test`). Tests cover SDS triggers, conditions, uncertain facts, ECHA classifier Steps 2–6, mass calculations and the 0.1% Article 33 boundary. GitHub Actions reruns the tests on pushes and pull requests.
 
 ## Project structure
 
 ```text
 index.html              # Accessible form, report container
 src/app.mjs             # UI interactions and downloadable JSON record
+src/echa-articles.mjs    # ECHA Figure 2 product classifier and Table 5 calculator
 src/rules.mjs           # Pure deterministic legal engine and source citations
 src/styles.css          # Responsive visual design
 tests/rules.test.mjs    # Regression tests
