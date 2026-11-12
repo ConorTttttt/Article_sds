@@ -15,4 +15,4 @@ jobs:
       - name: Unit and boundary regression tests
         run: node --test tests/*.test.mjs
       - name: Browser module syntax
-        run: node --check src/app.mjs && node --check src/rules.mjs
+        run: node --check src/app.mjs && node --check src/rules.mjs && node --check src/echa-articles.mjs
