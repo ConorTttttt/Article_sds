@@ -135,10 +135,10 @@ test("ECHA step 5 majority no yields combination", () =>
     q5a: "no", q5b: "no", q5c: "yes" }).status, "COMBINATION"));
 test("ECHA step 6 predominant article indicators", () =>
   assert.equal(classifyObject({ function: "To enclose a parcel", shapeDominates: "unknown",
-    separableChemical: "no", q6a: "yes", q6b: "yes", q6c: "yes", q6d: "no" }).status, "ARTICLE"));
+    separableChemical: "no", q6a: "yes", q6b: "yes", q6c: "yes", q6d: "no", step6RelevantQuestionsReviewed: "yes", step6Conclusion: "ARTICLE", step6Rationale: "Object purchased for its physical form after reviewing applicable indicators." }).status, "ARTICLE"));
 test("ECHA step 6 predominant substance indicators", () =>
   assert.equal(classifyObject({ function: "To serve as feedstock", shapeDominates: "unknown",
-    separableChemical: "no", q6a: "no", q6b: "no", q6c: "no", q6d: "yes" }).status, "CHEMICAL"));
+    separableChemical: "no", q6a: "no", q6b: "no", q6c: "no", q6d: "yes", step6RelevantQuestionsReviewed: "yes", step6Conclusion: "CHEMICAL", step6Rationale: "Further processing determines function more than the initial physical form." }).status, "CHEMICAL"));
 test("ECHA step 6 tie means review, not a guessed article", () =>
   assert.equal(classifyObject({ function: "To serve a function", shapeDominates: "unknown",
     separableChemical: "no", q6a: "no", q6b: "yes", q6c: "no", q6d: "yes" }).status, "REVIEW_REQUIRED"));
@@ -175,3 +175,11 @@ test("concentration calculation is deterministic across repeats", () => {
   const facts = {basis: "constituent_article", svhcMassGrams: 0.12, referenceMassGrams: 10};
   assert.deepEqual(svhcConcentration(facts), svhcConcentration(facts));
 });
+
+test("Step 6 majority alone cannot classify an article", () =>
+  assert.equal(classifyObject({ function: "To enclose parcels", shapeDominates: "unknown",
+    separableChemical: "no", q6a: "yes", q6b: "yes", q6c: "yes", q6d: "no" }).status, "REVIEW_REQUIRED"));
+test("Step 6 conclusion without reason cannot classify an article", () =>
+  assert.equal(classifyObject({ function: "To enclose parcels", shapeDominates: "unknown",
+    separableChemical: "no", q6a: "yes", step6RelevantQuestionsReviewed: "yes",
+    step6Conclusion: "ARTICLE", step6Rationale: "yes" }).status, "REVIEW_REQUIRED"));
