@@ -31,11 +31,12 @@ The Article 33 communication assessment is **separate** from SDS status.
 
 1. **REACH Article 3(3):** Article identification must be based on whether shape, surface or design determines function more than chemical composition. The UI asks for a **user-supported classification**: it does not automatically label an object an article.
 2. **REACH Article 31(1):** Hazardous substances/mixtures and PBT, vPvB or Candidate List substances can require an SDS.
-3. **REACH Article 31(3):** For non-hazard-classified mixtures, the tool screens *individual* ingredient concentrations for request-only SDS duties: ordinary human-health/environmental hazard `>=1% w/w` non-gas or `>=0.2% v/v` gas; specified special hazards `>=0.1% w/w` non-gas; Union workplace exposure limits. Certain CLP endocrine-disruptor category 2 mixture request notes (`>=0.1%`) are included. The user must confirm that all ingredients, relevant classifications and specific limits were reviewed for a negative result.
-4. **REACH Article 31(4):** General-public supply where adequate safe-use information is available may not need automatic SDS delivery; downstream-user or distributor requests override the exception.
-5. **REACH Article 33:** A Candidate List SVHC **above** `0.1% w/w` of an **individual constituent article** triggers safe-use information (minimum: substance name) to business recipients and, on consumer request, a response within **45 days**.
-6. **Directive 2013/29/EU Article 11(3):** Vehicle pyrotechnic articles require an SDS for professional users, in the requested language.
-7. **Article plus chemical payload:** For a cartridge, wipe or similar combination, the chemical substance/mixture requires a **separate** SDS assessment. The engine does not assume the whole combination is exempt.
+3. **REACH Annex II section 0.7:** SDSs are also required for the CLP Annex I 1.3 labelling-derogation special cases. The assessor asks this explicitly; an unknown answer blocks a negative decision.
+4. **REACH Article 31(3):** For non-hazard-classified mixtures, the tool screens *individual* ingredient concentrations for request-only SDS duties: ordinary human-health/environmental hazard `>=1% w/w` non-gas or `>=0.2% v/v` gas; specified special hazards `>=0.1% w/w` non-gas; Union workplace exposure limits. Certain CLP endocrine-disruptor category 2 mixture request notes (`>=0.1%`) are included. The user must confirm that all ingredients, relevant classifications and specific limits were reviewed for a negative result.
+5. **REACH Article 31(4):** General-public supply where adequate safe-use information is available may not need automatic SDS delivery; downstream-user or distributor requests override the exception.
+6. **REACH Article 33:** A Candidate List SVHC **above** `0.1% w/w` of an **individual constituent article** triggers safe-use information (minimum: substance name) to business recipients and, on consumer request, a response within **45 days**.
+7. **Directive 2013/29/EU Article 11(3):** Vehicle pyrotechnic articles require an SDS for professional users, in the requested language.
+8. **Article plus chemical payload:** For a cartridge, wipe or similar combination, the chemical substance/mixture requires a **separate** SDS assessment. The engine does not assume the whole combination is exempt.
 
 Source texts are linked directly in `src/rules.mjs`. The pinned baseline is **EU REACH consolidated 22 June 2026**, reviewed for this implementation on **12 November 2026**. `RULESET_VERSION` is part of every result.
 
@@ -53,6 +54,7 @@ Source texts are linked directly in `src/rules.mjs`. The pinned baseline is **EU
 
 - [REACH Regulation (EC) 1907/2006, consolidated 22 June 2026 (Articles 3, 31, 33)](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02006R1907-20260622)
 - [Directive 2013/29/EU, Article 11(3)](https://eur-lex.europa.eu/eli/dir/2013/29/oj/eng)
+- [Commission Regulation (EU) 2020/878, Annex II section 0.7](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32020R0878)
 - [Commission Delegated Regulation (EU) 2023/707 (CLP endocrine-disruptor classes)](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R0707)
 - [ECHA Guidance in a Nutshell: Requirements for substances in articles (2017)](https://echa.europa.eu/documents/10162/2324906/nutshell_guidance_articles2_en.pdf)
 - [ECHA: Extended safety data sheets](https://echa.europa.eu/safety-data-sheets)
