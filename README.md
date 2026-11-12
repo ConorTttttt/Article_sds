@@ -62,6 +62,20 @@ Source texts are linked directly in `src/rules.mjs`. The pinned baseline is **EU
 - [ECHA Guidance in a Nutshell: Requirements for substances in articles (2017)](https://echa.europa.eu/documents/10162/2324906/nutshell_guidance_articles2_en.pdf)
 - [ECHA: Extended safety data sheets](https://echa.europa.eu/safety-data-sheets)
 
+## Enhanced article obligations and LLM safety boundary
+
+On the `feat/deterministic-eu-sds-assessor` branch the browser app also supports an optional **Advanced component assessment JSON** input. It screens REACH Article 7(1), Article 7(2), Article 33 and SCIP independently of the original Article 31 SDS question. See [component input guide](docs/article-components-example.md) and the [example JSON](docs/article-components-example.json). The JSON example is synthetic and deliberately does not establish Candidate List membership.
+
+- **Legal-classification safety:** ECHA Figure 2, Step 6 no longer returns an automatic article/chemical outcome from a simple question majority. A reviewed Article 3(3) conclusion and substantive rationale are required. ECHA Steps 4–5 retain their actual indicative workflow.
+- **Canonical numerical predicates:** `knowledge/eu-articles-llm-rules.json` owns the numeric article thresholds, fact-to-code bindings and 14 rule identities. `node scripts/build-knowledge.mjs` generates the offline module; `npm run check:knowledge` prevents drift.
+- **Independent obligations:** Every present advanced branch produces `REQUIRED`, `NOT_REQUIRED`, `NOT_APPLICABLE` or `REVIEW_REQUIRED` alongside evidence gaps. It does not prepare SCIP submissions, register substances or verify supplier declarations.
+- **Supplier evidence and reproducibility:** Evidence IDs, article/chemical mass calculations, candidate-list snapshot metadata, reviewer fields and rule versions are exported. When WebCrypto is available, JSON exports include a SHA-256 fingerprint; **not** a qualified electronic signature or trusted timestamp.
+- **Candidate List dataset handling:** No automatic live ECHA data or CAS/group-membership inference is performed. Use the [authentic list](https://echa.europa.eu/candidate-list-table) with an assessed date and evidence reference. `node scripts/candidate-list-manifest.mjs <local-export> YYYY-MM-DD` creates an integrity manifest for a downloaded dataset, but does not verify its provenance or chemical coverage.
+- **LLM isolation:** `llm/fact-proposals.schema.json` and `src/llm-fact-proposals.mjs` admit only sourced suggestions into a review queue; the LLM cannot write approved facts or decision states. See [LLM contract](llm/README.md). No external LLM API is called by the site.
+- **Testing:** `npm run check` verifies unit/boundary tests, knowledge regeneration parity and module syntax.
+
+These additions are a deterministic, documented *screening capability*. A definitive legal determination still requires validated substance identification, article classification and relevant EU/sector law review.
+
 ## Testing
 
 Run `node --test tests/*.test.mjs` on Node 20+ (or `npm test`). Tests cover SDS triggers, conditions, uncertain facts, ECHA classifier Steps 2–6, mass calculations and the 0.1% Article 33 boundary. GitHub Actions reruns the tests on pushes and pull requests.
