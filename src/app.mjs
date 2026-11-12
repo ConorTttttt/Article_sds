@@ -72,7 +72,7 @@ visibility();
 
 const attrs = ["productType", "pyrotechnicVehicle", "professionalRecipient",
   "separateChemicalPayload", "intendedRelease", "candidateListPresent",
-  "maxComponentSvhcPercent", "allComponentsChecked", "clpHazardous",
+  "maxComponentSvhcPercent", "allComponentsChecked", "clpLabellingDerogation", "clpHazardous",
   "pbtOrVpVb", "substanceCandidateList", "mixturePhysical",
   "allMixtureIngredientsChecked", "offeredToPublic", "publicInformationSufficient",
   "downstreamRequest"];
