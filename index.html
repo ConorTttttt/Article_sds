@@ -75,8 +75,18 @@
             <select id="q6c" name="q6c" data-tri></select>
             <label for="q6d">6d · Does chemical composition remain unchanged in further processing?</label>
             <select id="q6d" name="q6d" data-tri></select>
+            <label for="step6RelevantQuestionsReviewed">Have all relevant Step 6 indications and their evidential weights been considered?</label>
+            <select id="step6RelevantQuestionsReviewed" name="step6RelevantQuestionsReviewed" data-tri></select>
+            <label for="step6Conclusion">Documented Article 3(3) judgement after Step 6</label>
+            <select id="step6Conclusion" name="step6Conclusion">
+              <option value="unknown">Not yet established</option>
+              <option value="ARTICLE">Article (reviewed)</option>
+              <option value="CHEMICAL">Substance / mixture (reviewed)</option>
+            </select>
+            <label for="step6Rationale">Evidence-based rationale (required for a Step 6 conclusion)</label>
+            <textarea id="step6Rationale" name="step6Rationale" rows="3" placeholder="Explain the relevance of the indicative questions and why form or composition determines the function"></textarea>
           </div>
-          <p class="hint">Indicative questions support the Article 3(3) definition; they do not conclusively classify every borderline product. Unknown or tied assessments require review.</p>
+          <p class="hint">Indicative questions support the Article 3(3) definition; they do not conclusively classify every borderline product. Step 6 conclusions require a documented judgement; numerical majority alone never determines classification.</p>
         </section>
 
         <section id="articleFields" class="conditional" hidden>
