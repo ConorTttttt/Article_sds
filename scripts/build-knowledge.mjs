@@ -33,13 +33,13 @@ validate(data);
 
 const canonical = {schema_version: data.schema_version, version: data.version, law_as_of: data.last_reviewed,
   thresholds: data.thresholds, fact_bindings: data.fact_bindings, sources: data.sources, rules: data.rules};
-const generated = "// Generated from knowledge/eu-articles-llm-rules.json; DO NOT EDIT.\\n" +
-  "export const ARTICLE_KNOWLEDGE = Object.freeze(" + JSON.stringify(canonical, null, 2) + ");\\n" +
-  "export const ARTICLE_THRESHOLDS = Object.freeze(ARTICLE_KNOWLEDGE.thresholds);\\n" +
-  "export const ARTICLE_RULES_BY_ID = Object.freeze(Object.fromEntries(ARTICLE_KNOWLEDGE.rules.map(r => [r.id, r])));\\n";
+const generated = "// Generated from knowledge/eu-articles-llm-rules.json; DO NOT EDIT.\n" +
+  "export const ARTICLE_KNOWLEDGE = Object.freeze(" + JSON.stringify(canonical, null, 2) + ");\n" +
+  "export const ARTICLE_THRESHOLDS = Object.freeze(ARTICLE_KNOWLEDGE.thresholds);\n" +
+  "export const ARTICLE_RULES_BY_ID = Object.freeze(Object.fromEntries(ARTICLE_KNOWLEDGE.rules.map(r => [r.id, r])));\n";
 if (process.argv.includes("--check")) {
   if (!fs.existsSync(outputPath) || fs.readFileSync(outputPath, "utf8") !== generated) {
-    process.stderr.write("Generated article knowledge is stale; run node scripts/build-knowledge.mjs\\n");
+    process.stderr.write("Generated article knowledge is stale; run node scripts/build-knowledge.mjs\n");
     process.exit(1);
   }
   console.log("Knowledge compiled artifact is in sync (" + data.rules.length + " rules)");
