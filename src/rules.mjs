@@ -74,15 +74,15 @@ function article33(facts) {
     const p = calculation ? (calculation.status === "CALCULATED" ? calculation.percent : null) : num(facts.maxComponentSvhcPercent);
     if (p === null || p < 0 || p > 100)
       return decision("REVIEW_REQUIRED", "Article 33: concentration needed",
-        "Enter the Candidate List substance concentration by weight in the affected constituent article (not the mass of the whole assembled product).", ["REACH_33"], ["Provide component-level concentration evidence."]);
+        "Enter a documented weight-by-weight concentration using the correct ECHA Table 5 reference mass: generally the constituent article; for an SVHC incorporated by joining or coating an assembled complex object, the appropriate complex-object mass.", ["REACH_33"], ["Provide component-level concentration evidence."]);
     if (p > 0.1)
       return decision("REQUIRED", "Article 33 information required",
-        "A Candidate List substance exceeds 0.1% w/w in a constituent article. Communicate sufficient safe-use information, at least the substance name, to business recipients; respond to consumer requests free of charge within 45 days.", ["REACH_33"]);
+        "A Candidate List substance exceeds 0.1% w/w on the documented reference mass (per constituent article or the ECHA Table 5 joining/coating complex-object scenario). Communicate sufficient safe-use information, at least the substance name, to business recipients; respond to consumer requests free of charge within 45 days.", ["REACH_33"]);
     if (complete !== "yes")
       return decision("REVIEW_REQUIRED", "Article 33: other components unverified",
-        "This substance is not above 0.1% w/w in the assessed component, but other constituent articles/substances have not been fully checked.", ["REACH_33"]);
+        "This assessment is not above 0.1% w/w on the documented reference mass, but other constituent articles/substances have not been fully checked.", ["REACH_33"]);
     return decision("NOT_REQUIRED", "No Article 33 trigger identified",
-      "The stated Candidate List concentrations are not above 0.1% w/w in any constituent article, according to the completed assessment.", ["REACH_33"]);
+      "The stated Candidate List concentrations are not above 0.1% w/w on any relevant ECHA Table 5 reference basis, according to the declared complete assessment.", ["REACH_33"]);
   }
   if (listed === "no" && complete === "yes")
     return decision("NOT_REQUIRED", "No Article 33 trigger identified",
