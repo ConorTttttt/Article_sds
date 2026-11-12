@@ -106,6 +106,19 @@ function collect() {
     percent: row.querySelector(".ingredient-percent").value,
     category: row.querySelector(".ingredient-category").value
   }));
+  const advancedText = byId("advancedArticleData")?.value.trim();
+  if (advancedText) {
+    try {
+      const additional = JSON.parse(advancedText);
+      if (!additional || !Array.isArray(additional.articleComponents) ||
+          !additional.articleAssessment || typeof additional.articleAssessment !== "object")
+        throw new Error("Expected articleComponents array and articleAssessment object.");
+      facts.articleComponents = additional.articleComponents;
+      facts.articleAssessment = additional.articleAssessment;
+    } catch (e) {
+      facts.articleDataError = "Invalid advanced component JSON: " + e.message;
+    }
+  }
   return facts;
 }
 function el(tag, cls, text) {
@@ -122,7 +135,8 @@ const statusNames = {
   REVIEW_REQUIRED: "Further assessment needed",
   ARTICLE: "Article",
   CHEMICAL: "Substance / mixture",
-  COMBINATION: "Combination product"
+  COMBINATION: "Combination product",
+  NOT_APPLICABLE: "Not applicable for assessed actor"
 };
 
 function reportCard(title, data) {
@@ -153,6 +167,17 @@ function render(report) {
   }));
   target.append(reportCard("SDS legal requirement", report.sds));
   if (report.article33) target.append(reportCard("Separate Article 33 information duty", report.article33));
+  if (report.article7_1) target.append(reportCard("Article 7(1) intended-release registration", report.article7_1));
+  if (report.article7_2) target.append(reportCard("Article 7(2) Candidate List notification", report.article7_2));
+  if (report.scip) target.append(reportCard("SCIP information duty", report.scip));
+  if (report.missingEvidence?.length) {
+    const gaps = el("section", "next-steps");
+    gaps.append(el("h3", "", "Evidence and data quality gaps"));
+    const list = el("ul");
+    for (const gap of report.missingEvidence) list.append(el("li", "", gap));
+    gaps.append(list);
+    target.append(gaps);
+  }
 
   if (report.related.length) {
     const related = el("section", "related");
@@ -161,7 +186,10 @@ function render(report) {
     target.append(related);
   }
 
-  const keys = [...new Set(["REACH_DEFINITION", "ECHA_ARTICLES", ...(report.sds.rules ?? []), ...(report.article33?.rules ?? [])])];
+  const keys = [...new Set(["REACH_DEFINITION", "ECHA_ARTICLES", ...(report.sds.rules ?? []), ...(report.article33?.rules ?? []),
+    ...(report.article7_1 ? ["REACH_ART7_1"] : []),
+    ...(report.article7_2 ? ["REACH_ART7_2"] : []),
+    ...(report.scip ? ["ECHA_SCIP"] : [])])];
   const sources = el("section", "citations");
   sources.append(el("h3", "", "Rules applied and legal sources"));
   if (!keys.length) sources.append(el("p", "", "No substantive rule could yet be applied."));
@@ -207,7 +235,10 @@ byId("resetForm").addEventListener("click", () => {
 
 byId("downloadReport").addEventListener("click", () => {
   if (!lastReport) return;
-  const keys = [...new Set(["REACH_DEFINITION", "ECHA_ARTICLES", ...(lastReport.sds.rules ?? []), ...(lastReport.article33?.rules ?? [])])];
+  const keys = [...new Set(["REACH_DEFINITION", "ECHA_ARTICLES", ...(lastReport.sds.rules ?? []), ...(lastReport.article33?.rules ?? []),
+    ...(lastReport.article7_1 ? ["REACH_ART7_1"] : []),
+    ...(lastReport.article7_2 ? ["REACH_ART7_2"] : []),
+    ...(lastReport.scip ? ["ECHA_SCIP"] : [])])];
   const record = {
     ...lastReport,
     sources: Object.fromEntries(keys.map(k => [k, SOURCES[k]]).filter(([, v]) => !!v)),
