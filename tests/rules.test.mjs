@@ -1,16 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { assess, mixtureRequestTriggers, RULESET_VERSION, SOURCES } from "../src/rules.mjs";
+import { classifyObject, svhcConcentration } from "../src/echa-articles.mjs";
 
 const article = {
+  classification: { function: "To support an intended physical function", shapeDominates: "yes" },
   productType: "article", pyrotechnicVehicle: "no", separateChemicalPayload: "no",
   candidateListPresent: "no", allComponentsChecked: "yes", intendedRelease: "no"
 };
 const substance = {
+  classification: { function: "To provide chemical action", shapeDominates: "no" },
   productType: "substance", clpHazardous: "no", clpLabellingDerogation: "no", pbtOrVpVb: "no",
   substanceCandidateList: "no", offeredToPublic: "no", downstreamRequest: "no"
 };
 const mixture = {
+  classification: { function: "To provide chemical action", shapeDominates: "no" },
   productType: "mixture", clpHazardous: "no", clpLabellingDerogation: "no", mixturePhysical: "nongas",
   offeredToPublic: "no", downstreamRequest: "no",
   allMixtureIngredientsChecked: "yes",
@@ -111,3 +115,63 @@ test("unassessed CLP labelling derogation blocks negative substance result", () 
   assert.equal(status({ ...substance, clpLabellingDerogation: "unknown" }), "REVIEW_REQUIRED"));
 test("unassessed CLP labelling derogation blocks negative mixture result", () =>
   assert.equal(status({ ...mixture, clpLabellingDerogation: "unknown" }), "REVIEW_REQUIRED"));
+
+
+// ECHA Guidance (2017), Figure 2: article determination, not a probabilistic classifier.
+test("ECHA Figure 2 step 2 direct article outcome", () =>
+  assert.equal(classifyObject({ function: "To write on paper", shapeDominates: "yes" }).status, "ARTICLE"));
+test("ECHA Figure 2 step 2 direct chemical outcome", () =>
+  assert.equal(classifyObject({ function: "To colour paper", shapeDominates: "no" }).status, "CHEMICAL"));
+test("ECHA step 4 majority yes gives article-plus-chemical combination (printer cartridge)", () =>
+  assert.equal(classifyObject({ function: "To bring ink onto paper", shapeDominates: "unknown",
+    separableChemical: "yes", q4a: "yes", q4b: "yes", q4c: "yes" }).status, "COMBINATION"));
+test("ECHA step 5 integral liquid can yield article (thermometer)", () =>
+  assert.equal(classifyObject({ function: "To indicate temperature", shapeDominates: "unknown",
+    separableChemical: "yes", q4a: "no", q4b: "no", q4c: "no",
+    q5a: "yes", q5b: "yes", q5c: "yes" }).status, "ARTICLE"));
+test("ECHA step 5 majority no yields combination", () =>
+  assert.equal(classifyObject({ function: "To deliver chemical", shapeDominates: "unknown",
+    separableChemical: "yes", q4a: "no", q4b: "no", q4c: "yes",
+    q5a: "no", q5b: "no", q5c: "yes" }).status, "COMBINATION"));
+test("ECHA step 6 predominant article indicators", () =>
+  assert.equal(classifyObject({ function: "To enclose a parcel", shapeDominates: "unknown",
+    separableChemical: "no", q6a: "yes", q6b: "yes", q6c: "yes", q6d: "no" }).status, "ARTICLE"));
+test("ECHA step 6 predominant substance indicators", () =>
+  assert.equal(classifyObject({ function: "To serve as feedstock", shapeDominates: "unknown",
+    separableChemical: "no", q6a: "no", q6b: "no", q6c: "no", q6d: "yes" }).status, "CHEMICAL"));
+test("ECHA step 6 tie means review, not a guessed article", () =>
+  assert.equal(classifyObject({ function: "To serve a function", shapeDominates: "unknown",
+    separableChemical: "no", q6a: "no", q6b: "yes", q6c: "no", q6d: "yes" }).status, "REVIEW_REQUIRED"));
+test("No function prevents a classification even if a yes answer supplied", () =>
+  assert.equal(classifyObject({ function: " ", shapeDominates: "yes" }).status, "REVIEW_REQUIRED"));
+test("unconfirmed article definition cannot create SDS not-required conclusion", () =>
+  assert.equal(status({ ...article, classification: { function: "Unknown", shapeDominates: "unknown" } }), "REVIEW_REQUIRED"));
+test("classification contradiction triggers a review", () =>
+  assert.equal(status({ ...article, classification: { function: "Deliver ink", shapeDominates: "no" } }), "REVIEW_REQUIRED"));
+test("classification contradiction blocks positive Article 33 assertion", () =>
+  assert.equal(info({ ...article, classification: { function: "Deliver ink", shapeDominates: "no" },
+    candidateListPresent: "yes", maxComponentSvhcPercent: ".4" }), "REVIEW_REQUIRED"));
+test("a classified chemical cannot be declared an article to avoid SDS", () =>
+  assert.equal(status({ ...article, classification: { function: "Deliver ink", shapeDominates: "no" } }), "REVIEW_REQUIRED"));
+test("retained SVHC mass ratio derives ECHA example 8 coating result of 0.15%", () =>
+  assert.equal(svhcConcentration({basis: "constituent_article", svhcMassGrams: 7.5,
+    referenceMassGrams: 5000}).percent, 0.15));
+test("ECHA complex-object joining mixture reference uses the assembled mass", () =>
+  assert.equal(Math.round(svhcConcentration({basis: "joining_or_coating_complex_object",
+    svhcMassGrams: 200, referenceMassGrams: 63000}).percent * 100) / 100, 0.32));
+test("Article 33 mass-based concentration triggers above 0.1%", () =>
+  assert.equal(info({ ...article, candidateListPresent: "yes", svhcConcentrationMode: "mass",
+    svhcBasis: "constituent_article", svhcMassGrams: "7.5", referenceMassGrams: "5000" }), "REQUIRED"));
+test("Article 33 mass calculation exactly 0.1% is not above threshold", () =>
+  assert.equal(info({ ...article, candidateListPresent: "yes", svhcConcentrationMode: "mass",
+    svhcBasis: "constituent_article", svhcMassGrams: "1", referenceMassGrams: "1000" }), "NOT_REQUIRED"));
+test("Article 33 rejects invalid component mass", () =>
+  assert.equal(info({ ...article, candidateListPresent: "yes", svhcConcentrationMode: "mass",
+    svhcBasis: "constituent_article", svhcMassGrams: "120", referenceMassGrams: "100" }), "REVIEW_REQUIRED"));
+test("Article 33 rejects wrong reference basis", () =>
+  assert.equal(info({ ...article, candidateListPresent: "yes", svhcConcentrationMode: "mass",
+    svhcBasis: "whole_product_average", svhcMassGrams: "10", referenceMassGrams: "1000" }), "REVIEW_REQUIRED"));
+test("concentration calculation is deterministic across repeats", () => {
+  const facts = {basis: "constituent_article", svhcMassGrams: 0.12, referenceMassGrams: 10};
+  assert.deepEqual(svhcConcentration(facts), svhcConcentration(facts));
+});
