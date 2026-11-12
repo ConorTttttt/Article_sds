@@ -19,7 +19,7 @@
     <section class="hero">
       <p class="eyebrow">EU CHEMICALS REGULATORY DECISION SUPPORT</p>
       <h1>Does this product legally need a safety data sheet?</h1>
-      <p>Answer structured questions. The application runs fixed rules, not AI. Get an auditable SDS outcome, a separate Article 33 assessment, and links to the legal provisions.</p>
+      <p>Answer structured questions. The application runs fixed rules, not AI. Get a traceable SDS outcome, a separate Article 33 assessment, and optional component-level Article 7 / SCIP screening with links to legal provisions.</p>
       <div class="chips"><span>Deterministic</span><span>Source-linked</span><span>Works offline</span><span>Uncertainty-aware</span></div>
     </section>
     <div class="workspace">
@@ -130,6 +130,13 @@
             <label for="allComponentsChecked">Have all constituent articles and relevant Candidate List substances been checked?</label>
             <select id="allComponentsChecked" name="allComponentsChecked" data-tri></select>
           </div>
+          <details class="subsection">
+            <summary>Advanced component-level Article 7 / Article 33 / SCIP screening</summary>
+            <p class="hint">Optional: paste a validated articleComponents/articleAssessment JSON object, with constituent articles, retained substance masses, annual quantities, evidence IDs and a dated Candidate List snapshot. Missing facts return review states. No data is uploaded.</p>
+            <label for="advancedArticleData">Advanced assessment JSON (optional)</label>
+            <textarea id="advancedArticleData" name="advancedArticleData" rows="8" spellcheck="false" placeholder='{"articleComponents":[...],"articleAssessment":{"assessmentDate":"2026-11-12","allComponentsChecked":"yes","actorRole":"producer","placedOnEUMarket":"yes","candidateListSnapshot":{"asOf":"2026-11-12","sourceUrl":"https://echa.europa.eu/candidate-list-table","evidenceId":"CL-2026"}}}'></textarea>
+            <p class="hint">See docs/article-components-example.json for the required structure. The application does not independently validate the contents of supplier documents or retrieve the Candidate List.</p>
+          </details>
         </section>
 
         <section id="chemicalFields" class="conditional" hidden>
