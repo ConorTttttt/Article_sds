@@ -1,11 +1,13 @@
 {
   "name": "eu-article-sds-assessor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Deterministic EU REACH article and SDS legal decision support",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "npm test && node --check src/app.mjs && node --check src/rules.mjs"
+    "check": "npm run check:knowledge && npm test && node --check src/app.mjs && node --check src/rules.mjs && node --check src/echa-articles.mjs && node --check src/article-obligations.mjs && node --check src/audit.mjs && node --check src/llm-fact-proposals.mjs && node --check scripts/candidate-list-manifest.mjs",
+    "build:knowledge": "node scripts/build-knowledge.mjs",
+    "check:knowledge": "node scripts/build-knowledge.mjs --check"
   }
 }
