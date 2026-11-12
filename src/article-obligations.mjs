@@ -110,7 +110,8 @@ export function assessArticleObligations(facts = {}) {
         concentration:calc, evidenceIds, annualUnits:number(component.annualUnits),
         intendedRelease:tri(entry?.intendedRelease),registeredForUse:tri(entry?.registeredForUse),
         exposureExcluded:tri(entry?.exposureExcluded),
-        recipientInstructionsProvided:tri(entry?.recipientInstructionsProvided)};
+        recipientInstructionsProvided:tri(entry?.recipientInstructionsProvided),
+        preListingOnly:tri(entry?.preListingOnly)};
       checks.push(row);
       allSubstances.push(row);
       if (!substanceId || list === "unknown" || evidenceIds.length === 0 ||
@@ -176,16 +177,21 @@ export function assessArticleObligations(facts = {}) {
       if (!validAmounts) {blockers.push("Provide annual unit counts for every qualifying article containing " + id + "."); continue;}
       const tonnes = entries.reduce((sum,x)=>sum+x.concentration.retainedMassGrams*x.annualUnits/1000000,0);
       if (!applies(tonnes,quantityRule)) continue;
-      if (entries.some(x => x.registeredForUse === "yes")) {
-        // Exemption must cover all the aggregated uses, not just one article.
-        if (entries.every(x => x.registeredForUse === "yes")) continue;
-      }
+      if (entries.every(x => x.registeredForUse === "yes")) continue;
+      if (entries.every(x => x.preListingOnly === "yes")) continue;
       if (entries.every(x => x.exposureExcluded === "yes" && x.recipientInstructionsProvided === "yes")) continue;
-      if (entries.some(x => x.registeredForUse === "unknown" || x.exposureExcluded === "unknown"))
+      if (entries.some(x => x.registeredForUse === "yes" || x.preListingOnly === "yes" ||
+          x.exposureExcluded === "yes") &&
+          !entries.every(x => x.registeredForUse === "no" && x.preListingOnly === "no" &&
+            x.exposureExcluded === "no")) {
+        blockers.push("Resolve use-specific exemptions and relevant tonnage allocations for " + id + ".");
+        continue;
+      }
+      if (entries.some(x => x.registeredForUse === "unknown" || x.exposureExcluded === "unknown" || x.preListingOnly === "unknown"))
         blockers.push("Determine registration-for-use and exposure exclusions for " + id + ".");
       else triggered.push(id + ": " + tonnes.toPrecision(4) + " tonnes/year");
     }
-    article7_2 = triggered.length && snapshotOk && !blockers.some(x => x.startsWith("Determine registration"))
+    article7_2 = triggered.length && snapshotOk
       ? info("REQUIRED", "Article 7(2) notification trigger", "A Candidate List substance exceeds both the component-level 0.1% threshold and the 1 tonne/year actor threshold without an evidenced exemption.",
         ["ART-009","ART-010","ART-011"],blockers,triggered)
       : (incomplete || blockers.length || (positive && !snapshotOk))
@@ -231,8 +237,8 @@ export function assessArticleObligations(facts = {}) {
     article7_1 = triggered.length ? info("REQUIRED", "Article 7(1) intended-release registration trigger",
       "The substance intended to be released is present above 1 tonne per producer/importer/year in the relevant articles; validate all statutory exemptions and registration steps.",
       ["ART-012","ART-010"],blockers,triggered)
-      : blockers.length || incomplete
-        ? review("Article 7(1) intended-release screening incomplete",blockers.concat(incomplete?missing:[]),["ART-012"])
+      : blockers.length || ctx.allComponentsChecked !== "yes" || comps.some(x => x?.allSubstancesChecked !== "yes")
+        ? review("Article 7(1) intended-release screening incomplete",blockers,["ART-012"])
         : info("NOT_REQUIRED", "No screened Article 7(1) intended-release registration trigger",
           "No known intended-release substance exceeds 1 tonne/year without an exemption.",["ART-012"]);
   }
