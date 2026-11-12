@@ -111,7 +111,13 @@ export function assessArticleObligations(facts = {}) {
         intendedRelease:tri(entry?.intendedRelease),registeredForUse:tri(entry?.registeredForUse),
         exposureExcluded:tri(entry?.exposureExcluded),
         recipientInstructionsProvided:tri(entry?.recipientInstructionsProvided),
-        preListingOnly:tri(entry?.preListingOnly)};
+        preListingOnly:tri(entry?.preListingOnly),
+        registrationEvidenceId:String(entry?.registrationEvidenceId || "").trim(),
+        registeredUseDescription:String(entry?.registeredUseDescription || "").trim(),
+        exposureEvidenceId:String(entry?.exposureEvidenceId || "").trim(),
+        preListingEvidenceId:String(entry?.preListingEvidenceId || "").trim(),
+        listingDate:entry?.listingDate || "",
+        latestProductionImportDate:entry?.latestProductionImportDate || ""};
       checks.push(row);
       allSubstances.push(row);
       if (!substanceId || list === "unknown" || evidenceIds.length === 0 ||
@@ -126,24 +132,36 @@ export function assessArticleObligations(facts = {}) {
   const matched = candidates.map(c => c.componentId + "/" + c.substanceId + " (" +
     c.concentration.percent.toPrecision(4) + "% w/w)");
   const positive = matched.length > 0;
-  const article33 = positive && snapshotOk ?
-    info("REQUIRED", "Article 33 communication triggered",
-      "One or more constituent articles exceed 0.1% w/w. Communicate safe-use information (at least the substance name) to business recipients; respond to consumer requests within 45 days.",
-      ["ART-007", "ART-008"], missing, matched) :
-    incomplete ? review("Article 33 evidence incomplete",missing,["ART-007","ART-008"]) :
-      info("NOT_REQUIRED", "No Article 33 threshold trigger",
-        "Declared complete component assessment contains no Candidate List substance above 0.1% w/w.",
-        ["ART-007","ART-008"],[],checks.map(x=>x.componentId+"/"+x.substanceId));
-
   const role = ctx.actorRole || "unknown";
   const actorProducer = ["producer","importer"].includes(role);
   const coveredScip = ["producer","importer","assembler","distributor"].includes(role);
   const market = tri(ctx.placedOnEUMarket);
+  const actorKnown = ["producer","importer","assembler","distributor",
+    "retailer_exclusively_consumer"].includes(role);
+  let article33;
+  if (market === "no") {
+    article33 = info("NOT_APPLICABLE", "No EU article supply in the assessed transaction",
+      "The Article 33 communication duty applies to a supplier of an article in scope.", ["ART-007"]);
+  } else if (market !== "yes" || !actorKnown) {
+    article33 = review("Confirm Article 33 supplier scope",
+      ["Establish EU supply/market placement and supplier role."],["ART-007"]);
+  } else if (positive && snapshotOk) {
+    article33 = info("REQUIRED", "Article 33 communication triggered",
+      "One or more constituent articles exceed 0.1% w/w. Communicate safe-use information (at least the substance name) to business recipients; respond to consumer requests within 45 days.",
+      ["ART-007","ART-008"],missing,matched);
+  } else if (incomplete) {
+    article33 = review("Article 33 evidence incomplete",missing,["ART-007","ART-008"]);
+  } else {
+    article33 = info("NOT_REQUIRED", "No Article 33 threshold trigger",
+      "Declared complete component assessment contains no Candidate List substance above 0.1% w/w.",
+      ["ART-007","ART-008"],[],checks.map(x=>x.componentId+"/"+x.substanceId));
+  }
+
   let scip;
   if (market === "no" || role === "retailer_exclusively_consumer") {
     scip = info("NOT_APPLICABLE", "No SCIP submission by this actor in the assessed supply",
       "EU market placement or actor-specific SCIP scope is not met as declared.", ["ART-013"]);
-  } else if (market !== "yes" || (!coveredScip && role !== "retailer_exclusively_consumer")) {
+  } else if (market !== "yes" || !coveredScip) {
     scip = review("Confirm SCIP supplier and market scope", ["Confirm EU market placement and supplier role."],["ART-013"]);
   } else if (positive && snapshotOk) {
     scip = info("REQUIRED", "SCIP information submission triggered",
@@ -177,18 +195,32 @@ export function assessArticleObligations(facts = {}) {
       if (!validAmounts) {blockers.push("Provide annual unit counts for every qualifying article containing " + id + "."); continue;}
       const tonnes = entries.reduce((sum,x)=>sum+x.concentration.retainedMassGrams*x.annualUnits/1000000,0);
       if (!applies(tonnes,quantityRule)) continue;
-      if (entries.every(x => x.registeredForUse === "yes")) continue;
-      if (entries.every(x => x.preListingOnly === "yes")) continue;
-      if (entries.every(x => x.exposureExcluded === "yes" && x.recipientInstructionsProvided === "yes")) continue;
+      if (entries.every(x => x.registeredForUse === "yes")) {
+        if (entries.every(x => x.registrationEvidenceId && x.registeredUseDescription)) continue;
+        blockers.push("Provide registration-for-that-use evidence and covered-use details for " + id + ".");
+        continue;
+      }
+      if (entries.every(x => x.preListingOnly === "yes")) {
+        if (entries.every(x => x.preListingEvidenceId && validDate(x.listingDate) &&
+            validDate(x.latestProductionImportDate) &&
+            x.latestProductionImportDate < x.listingDate)) continue;
+        blockers.push("Document Candidate List inclusion and final production/import dates for " + id + ".");
+        continue;
+      }
+      if (entries.every(x => x.exposureExcluded === "yes" && x.recipientInstructionsProvided === "yes")) {
+        if (entries.every(x => x.exposureEvidenceId)) continue;
+        blockers.push("Provide normal/foreseeable-use and waste-stage exposure-exclusion evidence for " + id + ".");
+        continue;
+      }
       if (entries.some(x => x.registeredForUse === "yes" || x.preListingOnly === "yes" ||
-          x.exposureExcluded === "yes") &&
-          !entries.every(x => x.registeredForUse === "no" && x.preListingOnly === "no" &&
-            x.exposureExcluded === "no")) {
+        x.exposureExcluded === "yes")) {
         blockers.push("Resolve use-specific exemptions and relevant tonnage allocations for " + id + ".");
         continue;
       }
-      if (entries.some(x => x.registeredForUse === "unknown" || x.exposureExcluded === "unknown" || x.preListingOnly === "unknown"))
-        blockers.push("Determine registration-for-use and exposure exclusions for " + id + ".");
+      if (entries.some(x => x.registeredForUse === "unknown" || x.exposureExcluded === "unknown" ||
+        x.preListingOnly === "unknown")) {
+        blockers.push("Determine registration-for-use and Article 7(2) exemptions for " + id + ".");
+      }
       else triggered.push(id + ": " + tonnes.toPrecision(4) + " tonnes/year");
     }
     article7_2 = triggered.length && snapshotOk
@@ -227,7 +259,15 @@ export function assessArticleObligations(facts = {}) {
       }
       const tonnes = entries.reduce((sum,x)=>sum + x.concentration.retainedMassGrams*x.annualUnits/1000000,0);
       if (!applies(tonnes,quantityRule)) continue;
-      if (entries.every(x => x.registeredForUse === "yes")) continue;
+      if (entries.every(x => x.registeredForUse === "yes")) {
+        if (entries.every(x => x.registrationEvidenceId && x.registeredUseDescription)) continue;
+        blockers.push("Provide Article 7(1) registration-for-use evidence and covered-use details for " + id + ".");
+        continue;
+      }
+      if (entries.some(x => x.registeredForUse === "yes")) {
+        blockers.push("Resolve mixed use-specific Article 7(1) registration exemptions for " + id + ".");
+        continue;
+      }
       if (entries.some(x => x.registeredForUse === "unknown")) {
         blockers.push("Confirm registered-for-that-use exemption for " + id + ".");
         continue;
