@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Deterministic EU SDS requirement screening for articles, substances and mixtures.">
+  <title>EU Article SDS | Rules-based assessment</title>
+  <link rel="stylesheet" href="./src/styles.css">
+  <script type="module" src="./src/app.mjs"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-row">
+      <div class="wordmark"><span class="mark">§</span><span>EU Article SDS</span></div>
+      <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02006R1907-20260622" target="_blank" rel="noopener noreferrer">EU REACH legal text ↗</a>
+    </div>
+  </header>
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">EU CHEMICALS REGULATORY DECISION SUPPORT</p>
+      <h1>Does this product legally need a safety data sheet?</h1>
+      <p>Answer structured questions. The application runs fixed rules, not AI. Get a traceable SDS outcome, a separate Article 33 assessment, and optional component-level Article 7 / SCIP screening with links to legal provisions.</p>
+      <div class="chips"><span>Deterministic</span><span>Source-linked</span><span>Works offline</span><span>Uncertainty-aware</span></div>
+    </section>
+    <div class="workspace">
+      <form id="assessment-form" class="panel" novalidate>
+        <div class="section-head"><span class="step">01</span><div><h2>Describe the product</h2><p>Use confirmed supplier / technical information. Unknown answers are acceptable.</p></div></div>
+        <label for="productType">How is the product classified under REACH?</label>
+        <select id="productType" name="productType">
+          <option value="unknown">Not yet established</option>
+          <option value="article">Article — shape, surface or design determines function</option>
+          <option value="substance">Substance</option>
+          <option value="mixture">Mixture</option>
+          <option value="combination">Article plus separable substance/mixture</option>
+        </select>
+        <p class="hint">Classification must be evidence-based. An article may still contain an independently supplied chemical component.</p>
+
+
+        <section class="subsection classification-module" aria-labelledby="classificationHeading">
+          <h3 id="classificationHeading">ECHA: Is this legally an article?</h3>
+          <p>Based on ECHA's 2017 <em>Guidance on requirements for substances in articles</em>, Figure 2, pp. 18–21. An explicit evidence-based classification is required before a final SDS assessment.</p>
+          <label for="objectFunction">Step 1 · What is the object's main intended function?</label>
+          <textarea id="objectFunction" name="objectFunction" rows="2" placeholder="e.g. To deposit ink on paper; to measure temperature; to protect against rain"></textarea>
+          <label for="shapeDominates">Step 2 · Is shape, surface or design more important to this function than chemical composition?</label>
+          <select id="shapeDominates" name="shapeDominates" data-tri></select>
+          <div id="classificationFollowup" hidden>
+            <label for="separableChemical">Step 3 · Can a substance/mixture be physically separated from the object (pouring, wringing out, etc.)?</label>
+            <select id="separableChemical" name="separableChemical" data-tri></select>
+          </div>
+          <div id="echaStep4" hidden class="followup-questions">
+            <h4>Step 4 · Chemical in a container or on a carrier</h4>
+            <label for="q4a">4a · Could the removed chemical still fulfil the main function independently?</label>
+            <select id="q4a" name="q4a" data-tri></select>
+            <label for="q4b">4b · Does the object primarily carry, contain or control delivery of the chemical/reaction products?</label>
+            <select id="q4b" name="q4b" data-tri></select>
+            <label for="q4c">4c · Is the chemical consumed/eliminated during use, ending the object's service life?</label>
+            <select id="q4c" name="q4c" data-tri></select>
+          </div>
+          <div id="echaStep5" hidden class="followup-questions">
+            <h4>Step 5 · Cross-check whether a chemical is integral</h4>
+            <label for="q5a">5a · Without the chemical, would the object be unable to fulfil its intended purpose?</label>
+            <select id="q5a" name="q5a" data-tri></select>
+            <label for="q5b">5b · Is its main purpose something other than delivery of chemical/reaction products?</label>
+            <select id="q5b" name="q5b" data-tri></select>
+            <label for="q5c">5c · Is the object normally discarded together with the chemical?</label>
+            <select id="q5c" name="q5c" data-tri></select>
+          </div>
+          <div id="echaStep6" hidden class="followup-questions">
+            <h4>Step 6 · Non-separable substance / further-processed material</h4>
+            <label for="q6a">6a · Does the object have a function beyond further processing?</label>
+            <select id="q6a" name="q6a" data-tri></select>
+            <label for="q6b">6b · Is it sold mainly for its shape, surface or design?</label>
+            <select id="q6b" name="q6b" data-tri></select>
+            <label for="q6c">6c · Does further processing cause only minor changes in shape?</label>
+            <select id="q6c" name="q6c" data-tri></select>
+            <label for="q6d">6d · Does chemical composition remain unchanged in further processing?</label>
+            <select id="q6d" name="q6d" data-tri></select>
+            <label for="step6RelevantQuestionsReviewed">Have all relevant Step 6 indications and their evidential weights been considered?</label>
+            <select id="step6RelevantQuestionsReviewed" name="step6RelevantQuestionsReviewed" data-tri></select>
+            <label for="step6Conclusion">Documented Article 3(3) judgement after Step 6</label>
+            <select id="step6Conclusion" name="step6Conclusion">
+              <option value="unknown">Not yet established</option>
+              <option value="ARTICLE">Article (reviewed)</option>
+              <option value="CHEMICAL">Substance / mixture (reviewed)</option>
+            </select>
+            <label for="step6Rationale">Evidence-based rationale (required for a Step 6 conclusion)</label>
+            <textarea id="step6Rationale" name="step6Rationale" rows="3" placeholder="Explain the relevance of the indicative questions and why form or composition determines the function"></textarea>
+          </div>
+          <p class="hint">Indicative questions support the Article 3(3) definition; they do not conclusively classify every borderline product. Step 6 conclusions require a documented judgement; numerical majority alone never determines classification.</p>
+        </section>
+
+        <section id="articleFields" class="conditional" hidden>
+          <div class="section-head nested"><span class="step">02</span><div><h2>Article-specific questions</h2><p>Vehicle pyrotechnics are a material exception.</p></div></div>
+          <label for="pyrotechnicVehicle">Is this a pyrotechnic article for vehicles?</label>
+          <select id="pyrotechnicVehicle" name="pyrotechnicVehicle" data-tri></select>
+          <div id="professionalFields" hidden>
+            <label for="professionalRecipient">Is it being supplied to a professional user?</label>
+            <select id="professionalRecipient" name="professionalRecipient" data-tri></select>
+          </div>
+          <label for="separateChemicalPayload">Does the supplied product contain a separate substance/mixture payload (e.g. ink, cleaning liquid)?</label>
+          <select id="separateChemicalPayload" name="separateChemicalPayload" data-tri></select>
+          <label for="intendedRelease">Is a substance intended to be released during normal use?</label>
+          <select id="intendedRelease" name="intendedRelease" data-tri></select>
+          <div class="subsection">
+            <h3>Separate REACH Article 33 check</h3>
+            <p>Assess each constituent article in an assembled product. The percentage is relative to the <strong>individual article</strong>, not the whole product.</p>
+            <label for="candidateListPresent">Has a Candidate List SVHC been identified in any constituent article?</label>
+            <select id="candidateListPresent" name="candidateListPresent" data-tri></select>
+            <label for="svhcConcentrationMode">How is the concentration evidenced?</label>
+            <select id="svhcConcentrationMode" name="svhcConcentrationMode">
+              <option value="manual">Known concentration (% w/w)</option>
+              <option value="mass">Calculate from retained substance mass and reference mass</option>
+            </select>
+            <div id="svhcManual">
+              <label for="maxComponentSvhcPercent">Highest relevant Candidate List SVHC concentration (% w/w) in the individual constituent article</label>
+              <input id="maxComponentSvhcPercent" name="maxComponentSvhcPercent" inputmode="decimal" type="number" step="any" min="0" max="100" placeholder="e.g. 0.15">
+            </div>
+            <div id="svhcMass" hidden>
+              <label for="svhcBasis">ECHA Table 5 · Which mass is used as denominator?</label>
+              <select id="svhcBasis" name="svhcBasis">
+                <option value="constituent_article">Individual constituent article, including incorporated coating</option>
+                <option value="joining_or_coating_complex_object">Complex object where this substance was incorporated by joining/coating the assembled object</option>
+              </select>
+              <label for="svhcMassGrams">Retained mass of this Candidate List substance (grams)</label>
+              <input id="svhcMassGrams" name="svhcMassGrams" type="number" step="any" min="0" placeholder="e.g. 0.75">
+              <label for="referenceMassGrams">Mass of the applicable article/complex object (grams)</label>
+              <input id="referenceMassGrams" name="referenceMassGrams" type="number" step="any" min="0" placeholder="e.g. 500">
+              <p class="hint">Never dilute an SVHC present in a constituent article across the whole assembled product. The complex-object reference mass is only applicable to joining/coating incorporation as in ECHA Table 5.</p>
+            </div>
+            <label for="allComponentsChecked">Have all constituent articles and relevant Candidate List substances been checked?</label>
+            <select id="allComponentsChecked" name="allComponentsChecked" data-tri></select>
+          </div>
+          <details class="subsection">
+            <summary>Advanced component-level Article 7 / Article 33 / SCIP screening</summary>
+            <p class="hint">Optional: paste a validated articleComponents/articleAssessment JSON object, with constituent articles, retained substance masses, annual quantities, evidence IDs and a dated Candidate List snapshot. Missing facts return review states. No data is uploaded.</p>
+            <label for="advancedArticleData">Advanced assessment JSON (optional)</label>
+            <textarea id="advancedArticleData" name="advancedArticleData" rows="8" spellcheck="false" placeholder='{"articleComponents":[...],"articleAssessment":{"assessmentDate":"2026-11-12","allComponentsChecked":"yes","actorRole":"producer","placedOnEUMarket":"yes","candidateListSnapshot":{"asOf":"2026-11-12","sourceUrl":"https://echa.europa.eu/candidate-list-table","evidenceId":"CL-2026"}}}'></textarea>
+            <p class="hint">See docs/article-components-example.json for the required structure. The application does not independently validate the contents of supplier documents or retrieve the Candidate List.</p>
+          </details>
+        </section>
+
+        <section id="chemicalFields" class="conditional" hidden>
+          <div class="section-head nested"><span class="step">02</span><div><h2>Substance or mixture</h2><p>Use an established EU CLP classification, not a guess.</p></div></div>
+          <label for="clpLabellingDerogation">Does a CLP Annex I 1.3 labelling-derogation special case apply (REACH Annex II 0.7)?</label>
+          <select id="clpLabellingDerogation" name="clpLabellingDerogation" data-tri></select>
+          <label for="clpHazardous">Does the substance/mixture meet CLP hazardous classification criteria?</label>
+          <select id="clpHazardous" name="clpHazardous" data-tri></select>
+          <div id="substanceFields" hidden>
+            <label for="pbtOrVpVb">Is the substance PBT or vPvB under REACH Annex XIII?</label>
+            <select id="pbtOrVpVb" name="pbtOrVpVb" data-tri></select>
+            <label for="substanceCandidateList">Is the substance on the Article 59(1) Candidate List?</label>
+            <select id="substanceCandidateList" name="substanceCandidateList" data-tri></select>
+          </div>
+          <div id="mixtureFields" hidden>
+            <label for="mixturePhysical">Is the mixture gaseous?</label>
+            <select id="mixturePhysical" name="mixturePhysical">
+              <option value="unknown">Unknown</option>
+              <option value="nongas">No — solid or liquid (% by weight)</option>
+              <option value="gas">Yes (% by volume)</option>
+            </select>
+            <h3>Ingredient triggers for non-classified mixtures</h3>
+            <p class="hint">Each row is one constituent. Select the <em>applicable screening category</em>. If multiple categories apply to one ingredient, enter it more than once. This does not calculate CLP classification.</p>
+            <div id="ingredientRows"></div>
+            <button id="addIngredient" type="button" class="secondary small">+ Add ingredient</button>
+            <label for="allMixtureIngredientsChecked">Have all ingredients, relevant hazard categories, exposure limits and specific limits been reviewed?</label>
+            <select id="allMixtureIngredientsChecked" name="allMixtureIngredientsChecked" data-tri></select>
+            <p class="hint">Special = REACH Article 31(3)(b) listed hazards (e.g. CMR, sensitiser, PBT/vPvB, Candidate List). ED2 = CLP category 2 endocrine-disruptor request note.</p>
+          </div>
+          <div class="subsection">
+            <h3>Supply context</h3>
+            <label for="offeredToPublic">Is the product offered or sold to the general public?</label>
+            <select id="offeredToPublic" name="offeredToPublic" data-tri></select>
+            <label for="publicInformationSufficient">If sold to the public, is sufficient safe-use information provided?</label>
+            <select id="publicInformationSufficient" name="publicInformationSufficient" data-tri></select>
+            <label for="downstreamRequest">Has a downstream user or distributor requested an SDS?</label>
+            <select id="downstreamRequest" name="downstreamRequest" data-tri></select>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button class="primary" type="submit">Assess legal requirement <span aria-hidden="true">→</span></button>
+          <button id="resetForm" class="secondary" type="button">Reset</button>
+        </div>
+      </form>
+
+      <aside class="panel results" aria-live="polite">
+        <div class="section-head"><span class="step">03</span><div><h2>Assessment report</h2><p>Ruleset pinned to 12 November 2026</p></div></div>
+        <div id="resultPlaceholder" class="placeholder">
+          <span class="placeholder-icon">§</span>
+          <h3>Ready for assessment</h3>
+          <p>Choose the product type and provide the facts you have. Your assessment is calculated locally in the browser.</p>
+        </div>
+        <div id="resultBody" hidden></div>
+        <button id="downloadReport" type="button" class="secondary download" hidden>Download JSON evidence record</button>
+      </aside>
+    </div>
+    <section class="bottom-notes">
+      <h2>How to interpret an outcome</h2>
+      <div class="note-grid">
+        <div><strong>SDS is not the same as Article 33.</strong><p>An ordinary article can have an SVHC information duty without an SDS duty.</p></div>
+        <div><strong>Unknown is a valid outcome.</strong><p>Absent or incomplete composition or classification information must be investigated.</p></div>
+        <div><strong>Not a substitute for legal review.</strong><p>Scope exemptions, national implementation, product-specific legislation and evolving EU rules require validation before regulatory sign-off.</p></div>
+      </div>
+    </section>
+  </main>
+  <footer class="container footer">EU Article SDS • Rules-based compliance screening • No data is sent to a server</footer>
+</body>
+</html>

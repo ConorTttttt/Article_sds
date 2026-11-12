@@ -1,0 +1,51 @@
+{
+  "articleComponents": [
+    {
+      "id": "fastener-1",
+      "massGrams": 10,
+      "annualUnits": 10000,
+      "allSubstancesChecked": "yes",
+      "substances": [
+        {
+          "substanceId": "REPLACE-WITH-REAL-SUBSTANCE",
+          "name": "Synthetic input - not a real Candidate List assertion",
+          "candidateList": "unknown",
+          "retainedMassGrams": 0.02,
+          "referenceBasis": "constituent_article",
+          "evidenceIds": [
+            "REPLACE-SUPPLIER-EVIDENCE"
+          ],
+          "intendedRelease": "no",
+          "registeredForUse": "unknown",
+          "exposureExcluded": "unknown",
+          "recipientInstructionsProvided": "unknown",
+          "preListingOnly": "unknown"
+        }
+      ]
+    }
+  ],
+  "articleAssessment": {
+    "assessmentDate": "2026-11-12",
+    "actorRole": "importer",
+    "placedOnEUMarket": "yes",
+    "allComponentsChecked": "yes",
+    "candidateListSnapshot": {
+      "asOf": "2026-11-12",
+      "sourceUrl": "https://echa.europa.eu/candidate-list-table",
+      "evidenceId": "REPLACE-WITH-AUTHENTIC-SNAPSHOT"
+    },
+    "evidenceRegister": [
+      {
+        "id": "REPLACE-SUPPLIER-EVIDENCE",
+        "type": "supplier_declaration",
+        "documentRef": "placeholder",
+        "reviewed": "no"
+      }
+    ],
+    "review": {
+      "reviewer": null,
+      "approved": false,
+      "date": null
+    }
+  }
+}
