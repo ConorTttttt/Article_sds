@@ -16,6 +16,11 @@ export const SOURCES = Object.freeze({
     url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02006R1907-20260622",
     description: "Mandatory SDS for applicable hazardous substances/mixtures and certain PBT, vPvB and Candidate List substances."
   },
+  REACH_ANNEXII_07: {
+    name: "REACH Annex II section 0.7",
+    url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32020R0878",
+    description: "SDSs are required for certain CLP Annex I 1.3 labelling-derogation special cases."
+  },
   REACH_31_3: {
     name: "REACH Article 31(3)",
     url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02006R1907-20260622",
@@ -179,24 +184,32 @@ export function assess(raw = {}) {
       "A combination product may contain both an article and an independently supplied substance/mixture. Evaluate the chemical portion using the substance or mixture pathway.", ["ECHA_ARTICLES", "REACH_31_1"]);
   } else if (kind === "substance") {
     const hazardous = tri(facts.clpHazardous), pbt = tri(facts.pbtOrVpVb), svhc = tri(facts.substanceCandidateList);
-    if ([hazardous, pbt, svhc].includes("yes")) {
+    const special = tri(facts.clpLabellingDerogation);
+    if (special === "yes") {
+      sds = applyPublicException(facts, decision("REQUIRED", "SDS required for CLP special case",
+        "REACH Annex II section 0.7 requires SDSs for specified CLP Annex I 1.3 labelling derogation cases.", ["REACH_ANNEXII_07"]));
+    } else if ([hazardous, pbt, svhc].includes("yes")) {
       sds = applyPublicException(facts, decision("REQUIRED", "SDS required for substance",
         "One or more REACH Article 31(1) conditions were confirmed (CLP hazardous, PBT/vPvB, or Candidate List).", ["REACH_31_1"]));
-    } else if ([hazardous, pbt, svhc].includes("unknown")) {
-      sds = decision("REVIEW_REQUIRED", "Substance hazard/list status incomplete",
-        "Confirm CLP classification, PBT/vPvB and Candidate List status before determining SDS duties.", ["REACH_31_1"]);
+    } else if ([hazardous, pbt, svhc, special].includes("unknown")) {
+      sds = decision("REVIEW_REQUIRED", "Substance hazard/list/special-case status incomplete",
+        "Confirm CLP classification, CLP labelling-derogation special cases, PBT/vPvB and Candidate List status before determining SDS duties.", ["REACH_31_1", "REACH_ANNEXII_07"]);
     } else {
       sds = decision("NOT_REQUIRED", "No REACH Article 31 SDS trigger identified",
         "All three Article 31(1) conditions were declared absent. Other information and sector-specific obligations may still apply.", ["REACH_31_1"]);
     }
   } else if (kind === "mixture") {
     const hazardous = tri(facts.clpHazardous);
-    if (hazardous === "yes") {
+    const special = tri(facts.clpLabellingDerogation);
+    if (special === "yes") {
+      sds = applyPublicException(facts, decision("REQUIRED", "SDS required for CLP special case",
+        "REACH Annex II section 0.7 requires SDSs for specified CLP Annex I 1.3 labelling derogation cases.", ["REACH_ANNEXII_07"]));
+    } else if (hazardous === "yes") {
       sds = applyPublicException(facts, decision("REQUIRED", "SDS required for hazardous mixture",
         "The mixture meets CLP hazardous-classification criteria.", ["REACH_31_1"]));
-    } else if (hazardous === "unknown") {
-      sds = decision("REVIEW_REQUIRED", "CLP classification must be established",
-        "The engine cannot infer CLP classification from ingredient percentages. Supply a documented mixture classification.", ["REACH_31_1"]);
+    } else if (hazardous === "unknown" || special === "unknown") {
+      sds = decision("REVIEW_REQUIRED", "CLP classification/special-case status incomplete",
+        "Confirm documented CLP mixture classification and any CLP Annex I 1.3 labelling derogation. The engine cannot infer this from ingredient percentages.", ["REACH_31_1", "REACH_ANNEXII_07"]);
     } else {
       const x = mixtureRequestTriggers(facts);
       if (x.matched.length) {
