@@ -7,11 +7,11 @@ const article = {
   candidateListPresent: "no", allComponentsChecked: "yes", intendedRelease: "no"
 };
 const substance = {
-  productType: "substance", clpHazardous: "no", pbtOrVpVb: "no",
+  productType: "substance", clpHazardous: "no", clpLabellingDerogation: "no", pbtOrVpVb: "no",
   substanceCandidateList: "no", offeredToPublic: "no", downstreamRequest: "no"
 };
 const mixture = {
-  productType: "mixture", clpHazardous: "no", mixturePhysical: "nongas",
+  productType: "mixture", clpHazardous: "no", clpLabellingDerogation: "no", mixturePhysical: "nongas",
   offeredToPublic: "no", downstreamRequest: "no",
   allMixtureIngredientsChecked: "yes",
   ingredients: [{ name: "A", percent: "1", category: "none" }]
@@ -102,3 +102,12 @@ test("every cited rule exists and has a legal-source URL", () => {
     for (const rule of obj.rules) assert.match(SOURCES[rule]?.url ?? "", /^https:\/\//);
   }
 });
+
+test("CLP special labelling derogation can independently require SDS for substance", () =>
+  assert.equal(status({ ...substance, clpLabellingDerogation: "yes" }), "REQUIRED"));
+test("CLP special labelling derogation can independently require SDS for mixture", () =>
+  assert.equal(status({ ...mixture, clpLabellingDerogation: "yes" }), "REQUIRED"));
+test("unassessed CLP labelling derogation blocks negative substance result", () =>
+  assert.equal(status({ ...substance, clpLabellingDerogation: "unknown" }), "REVIEW_REQUIRED"));
+test("unassessed CLP labelling derogation blocks negative mixture result", () =>
+  assert.equal(status({ ...mixture, clpLabellingDerogation: "unknown" }), "REVIEW_REQUIRED"));
