@@ -35,6 +35,50 @@
         </select>
         <p class="hint">Classification must be evidence-based. An article may still contain an independently supplied chemical component.</p>
 
+
+        <section class="subsection classification-module" aria-labelledby="classificationHeading">
+          <h3 id="classificationHeading">ECHA: Is this legally an article?</h3>
+          <p>Based on ECHA's 2017 <em>Guidance on requirements for substances in articles</em>, Figure 2, pp. 18–21. An explicit evidence-based classification is required before a final SDS assessment.</p>
+          <label for="objectFunction">Step 1 · What is the object's main intended function?</label>
+          <textarea id="objectFunction" name="objectFunction" rows="2" placeholder="e.g. To deposit ink on paper; to measure temperature; to protect against rain"></textarea>
+          <label for="shapeDominates">Step 2 · Is shape, surface or design more important to this function than chemical composition?</label>
+          <select id="shapeDominates" name="shapeDominates" data-tri></select>
+          <div id="classificationFollowup" hidden>
+            <label for="separableChemical">Step 3 · Can a substance/mixture be physically separated from the object (pouring, wringing out, etc.)?</label>
+            <select id="separableChemical" name="separableChemical" data-tri></select>
+          </div>
+          <div id="echaStep4" hidden class="followup-questions">
+            <h4>Step 4 · Chemical in a container or on a carrier</h4>
+            <label for="q4a">4a · Could the removed chemical still fulfil the main function independently?</label>
+            <select id="q4a" name="q4a" data-tri></select>
+            <label for="q4b">4b · Does the object primarily carry, contain or control delivery of the chemical/reaction products?</label>
+            <select id="q4b" name="q4b" data-tri></select>
+            <label for="q4c">4c · Is the chemical consumed/eliminated during use, ending the object's service life?</label>
+            <select id="q4c" name="q4c" data-tri></select>
+          </div>
+          <div id="echaStep5" hidden class="followup-questions">
+            <h4>Step 5 · Cross-check whether a chemical is integral</h4>
+            <label for="q5a">5a · Without the chemical, would the object be unable to fulfil its intended purpose?</label>
+            <select id="q5a" name="q5a" data-tri></select>
+            <label for="q5b">5b · Is its main purpose something other than delivery of chemical/reaction products?</label>
+            <select id="q5b" name="q5b" data-tri></select>
+            <label for="q5c">5c · Is the object normally discarded together with the chemical?</label>
+            <select id="q5c" name="q5c" data-tri></select>
+          </div>
+          <div id="echaStep6" hidden class="followup-questions">
+            <h4>Step 6 · Non-separable substance / further-processed material</h4>
+            <label for="q6a">6a · Does the object have a function beyond further processing?</label>
+            <select id="q6a" name="q6a" data-tri></select>
+            <label for="q6b">6b · Is it sold mainly for its shape, surface or design?</label>
+            <select id="q6b" name="q6b" data-tri></select>
+            <label for="q6c">6c · Does further processing cause only minor changes in shape?</label>
+            <select id="q6c" name="q6c" data-tri></select>
+            <label for="q6d">6d · Does chemical composition remain unchanged in further processing?</label>
+            <select id="q6d" name="q6d" data-tri></select>
+          </div>
+          <p class="hint">Indicative questions support the Article 3(3) definition; they do not conclusively classify every borderline product. Unknown or tied assessments require review.</p>
+        </section>
+
         <section id="articleFields" class="conditional" hidden>
           <div class="section-head nested"><span class="step">02</span><div><h2>Article-specific questions</h2><p>Vehicle pyrotechnics are a material exception.</p></div></div>
           <label for="pyrotechnicVehicle">Is this a pyrotechnic article for vehicles?</label>
@@ -52,8 +96,27 @@
             <p>Assess each constituent article in an assembled product. The percentage is relative to the <strong>individual article</strong>, not the whole product.</p>
             <label for="candidateListPresent">Has a Candidate List SVHC been identified in any constituent article?</label>
             <select id="candidateListPresent" name="candidateListPresent" data-tri></select>
-            <label for="maxComponentSvhcPercent">Highest relevant SVHC concentration in a constituent article (% w/w)</label>
-            <input id="maxComponentSvhcPercent" name="maxComponentSvhcPercent" inputmode="decimal" type="number" step="any" min="0" max="100" placeholder="e.g. 0.15">
+            <label for="svhcConcentrationMode">How is the concentration evidenced?</label>
+            <select id="svhcConcentrationMode" name="svhcConcentrationMode">
+              <option value="manual">Known concentration (% w/w)</option>
+              <option value="mass">Calculate from retained substance mass and reference mass</option>
+            </select>
+            <div id="svhcManual">
+              <label for="maxComponentSvhcPercent">Highest relevant Candidate List SVHC concentration (% w/w) in the individual constituent article</label>
+              <input id="maxComponentSvhcPercent" name="maxComponentSvhcPercent" inputmode="decimal" type="number" step="any" min="0" max="100" placeholder="e.g. 0.15">
+            </div>
+            <div id="svhcMass" hidden>
+              <label for="svhcBasis">ECHA Table 5 · Which mass is used as denominator?</label>
+              <select id="svhcBasis" name="svhcBasis">
+                <option value="constituent_article">Individual constituent article, including incorporated coating</option>
+                <option value="joining_or_coating_complex_object">Complex object where this substance was incorporated by joining/coating the assembled object</option>
+              </select>
+              <label for="svhcMassGrams">Retained mass of this Candidate List substance (grams)</label>
+              <input id="svhcMassGrams" name="svhcMassGrams" type="number" step="any" min="0" placeholder="e.g. 0.75">
+              <label for="referenceMassGrams">Mass of the applicable article/complex object (grams)</label>
+              <input id="referenceMassGrams" name="referenceMassGrams" type="number" step="any" min="0" placeholder="e.g. 500">
+              <p class="hint">Never dilute an SVHC present in a constituent article across the whole assembled product. The complex-object reference mass is only applicable to joining/coating incorporation as in ECHA Table 5.</p>
+            </div>
             <label for="allComponentsChecked">Have all constituent articles and relevant Candidate List substances been checked?</label>
             <select id="allComponentsChecked" name="allComponentsChecked" data-tri></select>
           </div>
