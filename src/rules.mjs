@@ -3,7 +3,9 @@
  * Scope: EU law, facts supplied by the assessor. This is NOT a chemical-classification engine.
  * Ruleset version is pinned; update only after legal review and regression tests.
  */
-export const RULESET_VERSION = "eu-sds-2026-11-v1";
+import { classifyObject, svhcConcentration } from "./echa-articles.mjs";
+
+export const RULESET_VERSION = "eu-sds-2026-11-v2-echa2017";
 export const LAW_AS_OF = "2026-11-12";
 export const SOURCES = Object.freeze({
   REACH_DEFINITION: {
@@ -47,9 +49,9 @@ export const SOURCES = Object.freeze({
     description: "Certain category 2 endocrine disruptors at 0.1% in mixtures trigger SDS availability upon request."
   },
   ECHA_ARTICLES: {
-    name: "ECHA guidance: substances in articles",
-    url: "https://echa.europa.eu/documents/10162/2324906/nutshell_guidance_articles2_en.pdf",
-    description: "Explains separate chemical payloads, constituent articles and Article 33 communication."
+    name: "ECHA Guidance on requirements for substances in articles, Version 4.0, June 2017",
+    url: "https://echa.europa.eu/documents/10162/2324906/articles_en.pdf",
+    description: "Section 2 / Figure 2 (pp. 16-21) on classification; Table 5 (pp. 33-36) on reference mass; Section 3.2 (pp. 26-27) on Article 33."
   }
 });
 
@@ -64,7 +66,12 @@ function article33(facts) {
   const listed = tri(facts.candidateListPresent);
   const complete = tri(facts.allComponentsChecked);
   if (listed === "yes") {
-    const p = num(facts.maxComponentSvhcPercent);
+    const calculation = facts.svhcConcentrationMode === "mass" ? svhcConcentration({
+      basis: facts.svhcBasis,
+      svhcMassGrams: facts.svhcMassGrams,
+      referenceMassGrams: facts.referenceMassGrams
+    }) : null;
+    const p = calculation ? (calculation.status === "CALCULATED" ? calculation.percent : null) : num(facts.maxComponentSvhcPercent);
     if (p === null || p < 0 || p > 100)
       return decision("REVIEW_REQUIRED", "Article 33: concentration needed",
         "Enter the Candidate List substance concentration by weight in the affected constituent article (not the mass of the whole assembled product).", ["REACH_33"], ["Provide component-level concentration evidence."]);
@@ -143,6 +150,7 @@ export function mixtureRequestTriggers(facts) {
 export function assess(raw = {}) {
   const facts = raw && typeof raw === "object" ? raw : {};
   const kind = facts.productType;
+  const classification = classifyObject(facts.classification);
   const related = [];
   let sds;
   let articleInformation = null;
@@ -232,7 +240,24 @@ export function assess(raw = {}) {
 
   if (["substance", "mixture"].includes(kind) && sds.status !== "REQUIRED")
     related.push("REACH Article 32 may still require supply-chain information when an SDS is not provided; this assessment does not determine Article 32 compliance.");
+  // A documented article classification is necessary before a negative article SDS outcome.
+  // ECHA's indicative questions inform (but cannot replace) the legal Article 3(3) test.
+  const expected = kind === "article" ? "ARTICLE" :
+    ["substance", "mixture"].includes(kind) ? "CHEMICAL" :
+    kind === "combination" ? "COMBINATION" : null;
+  if (expected && classification.status !== expected && kind !== "combination") {
+    sds = decision("REVIEW_REQUIRED", "Product classification must be resolved",
+      "The declared product category has not been established by the ECHA article-classification workflow. " +
+      classification.explanation + " An SDS conclusion must wait for defensible classification.",
+      ["REACH_DEFINITION", "ECHA_ARTICLES"],
+      classification.next ?? []);
+    if (kind === "article") articleInformation = decision("REVIEW_REQUIRED",
+      "Article 33 depends on confirming the product is an article",
+      "The declared article classification is unconfirmed or contradicted by the guided assessment.",
+      ["REACH_DEFINITION", "ECHA_ARTICLES"]);
+  }
   return {
+    classification,
     rulesetVersion: RULESET_VERSION,
     lawAsOf: LAW_AS_OF,
     scope: "EU REACH / Directive 2013/29/EU; input-based screening, not legal certification.",
