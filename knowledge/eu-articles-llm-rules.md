@@ -23,7 +23,7 @@
 Provide one result per module rather than one generic "compliant" verdict:
 ```json
 {
-  "ruleset_version": "eu-articles-llm-2026-11-12-v1",
+  "ruleset_version": "eu-articles-llm-2026-11-12-v2",
   "as_of": "YYYY-MM-DD",
   "product_classification": {"state":"ARTICLE|CHEMICAL|COMBINATION|REVIEW_REQUIRED","evidence":[]},
   "reach_article31_sds": {"state":"NOT_REQUIRED|REQUIRED|REVIEW_REQUIRED|NOT_APPLICABLE","rule_ids":[]},
