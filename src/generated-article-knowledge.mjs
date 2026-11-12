@@ -1,7 +1,7 @@
 // Generated from knowledge/eu-articles-llm-rules.json; DO NOT EDIT.
 export const ARTICLE_KNOWLEDGE = Object.freeze({
   "schema_version": 2,
-  "version": "eu-articles-llm-2026-11-12-v1",
+  "version": "eu-articles-llm-2026-11-12-v2",
   "law_as_of": "2026-11-12",
   "thresholds": {
     "candidate_list_w_w_percent": {
