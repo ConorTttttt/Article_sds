@@ -73,7 +73,15 @@
       "cautions": [
         "An object marketed as a 'product' is not necessarily an article.",
         "ECHA indicative questions aid judgement; they are not alternative legal definitions."
-      ]
+      ],
+      "machine": {
+        "runtime": "classifyObject",
+        "mode": "documented_judgement",
+        "fact_paths": [
+          "classification.function",
+          "classification.shapeDominates"
+        ]
+      }
     },
     {
       "id": "ART-002",
@@ -96,7 +104,16 @@
       "cautions": [
         "Do not treat separable hazardous ink as exempt merely because the cartridge is an article.",
         "Where relevant indicators conflict, REVIEW_REQUIRED."
-      ]
+      ],
+      "machine": {
+        "runtime": "classifyObject",
+        "mode": "indicative",
+        "fact_paths": [
+          "classification.separableChemical",
+          "classification.q4a..q4c",
+          "classification.q5a..q5c"
+        ]
+      }
     },
     {
       "id": "ART-003",
@@ -118,7 +135,17 @@
       ],
       "cautions": [
         "A complex object contains distinct constituent articles; assembly normally does not erase their article status."
-      ]
+      ],
+      "machine": {
+        "runtime": "classifyObject",
+        "mode": "human_review_required_at_step6",
+        "fact_paths": [
+          "classification.q6a..q6d",
+          "classification.step6Conclusion",
+          "classification.step6Rationale",
+          "classification.step6RelevantQuestionsReviewed"
+        ]
+      }
     },
     {
       "id": "ART-004",
@@ -141,7 +168,17 @@
       "cautions": [
         "Do not infer that an article containing a classified hazardous substance, or a Candidate List substance above 0.1%, requires an SDS.",
         "Unknown pyrotechnic/other sector regime may require REVIEW_REQUIRED rather than an unconditional global 'no SDS'."
-      ]
+      ],
+      "machine": {
+        "runtime": "assess",
+        "mode": "classification_based",
+        "fact_paths": [
+          "productType",
+          "classification",
+          "separateChemicalPayload",
+          "pyrotechnicVehicle"
+        ]
+      }
     },
     {
       "id": "ART-005",
@@ -162,7 +199,14 @@
       ],
       "cautions": [
         "Never collapse article and chemical payload into one legal classification."
-      ]
+      ],
+      "machine": {
+        "runtime": "assess",
+        "mode": "separate_payload_review",
+        "fact_paths": [
+          "separateChemicalPayload"
+        ]
+      }
     },
     {
       "id": "ART-006",
@@ -182,7 +226,15 @@
       ],
       "cautions": [
         "This is an exception to 'no SDS for articles' under sector-specific legislation, not a REACH Article 31 article rule."
-      ]
+      ],
+      "machine": {
+        "runtime": "assess",
+        "mode": "sector",
+        "fact_paths": [
+          "pyrotechnicVehicle",
+          "professionalRecipient"
+        ]
+      }
     },
     {
       "id": "ART-007",
@@ -208,7 +260,16 @@
         "At exactly 0.1% this specific >0.1% trigger is not met.",
         "The tonnage threshold and Article 7 exemptions do not remove Article 33.",
         "No SDS substitute is required; an Article 33 information format can be used."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "threshold",
+        "threshold": "candidate_list_w_w_percent",
+        "fact_paths": [
+          "articleComponents[].substances[]",
+          "articleAssessment"
+        ]
+      }
     },
     {
       "id": "ART-008",
@@ -233,7 +294,16 @@
         "Never dilute an SVHC in a screw or other constituent article over the total bicycle/vehicle mass.",
         "Dry coatings, adhesives, and EU assembly stages require specific scenario review; do not assume one universal denominator.",
         "Averaging across different article types can conceal a positive obligation."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "calculation",
+        "fact_paths": [
+          "articleComponents[].massGrams",
+          "articleComponents[].substances[].retainedMassGrams",
+          "articleComponents[].substances[].referenceBasis"
+        ]
+      }
     },
     {
       "id": "ART-009",
@@ -260,7 +330,19 @@
         "Aggregate substance mass across relevant qualifying articles, not only total finished-product mass.",
         "An assembler of pre-existing EU-supplied articles without adding substances normally does not repeat upstream notification; see ECHA Table 3.",
         "Article 33 can apply even where 7(2) does not."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "two_thresholds",
+        "thresholds": [
+          "candidate_list_w_w_percent",
+          "article_7_tonnes_per_year"
+        ],
+        "fact_paths": [
+          "articleComponents[]",
+          "articleAssessment.actorRole"
+        ]
+      }
     },
     {
       "id": "ART-010",
@@ -283,7 +365,14 @@
       "cautions": [
         "Registration somewhere is not enough unless the particular use is covered.",
         "This does not waive Article 33 or SCIP duties."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "exemption",
+        "fact_paths": [
+          "articleComponents[].substances[].registeredForUse"
+        ]
+      }
     },
     {
       "id": "ART-011",
@@ -306,7 +395,14 @@
       "cautions": [
         "Not simply 'no intentional release': migration, abrasion and disposal can still create exposure.",
         "Does not exempt Article 33 information obligations or automatically exempt SCIP."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "exemption",
+        "fact_paths": [
+          "articleComponents[].substances[].exposureExcluded"
+        ]
+      }
     },
     {
       "id": "ART-012",
@@ -332,7 +428,16 @@
         "Count the total substance contained in articles with intended release, not just the fraction expected to be released.",
         "Leakage, abrasion, accidental breakage and release during disposal do not by themselves constitute intended release.",
         "An intended release does not, without more, trigger an SDS for the article."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "threshold",
+        "threshold": "article_7_tonnes_per_year",
+        "fact_paths": [
+          "articleComponents[].substances[].intendedRelease",
+          "articleComponents[].annualUnits"
+        ]
+      }
     },
     {
       "id": "ART-013",
@@ -355,7 +460,17 @@
       "cautions": [
         "Do not equate Article 7(2) notification to SCIP: the obligations and thresholds differ.",
         "The 2017 guidance cannot be cited as support for SCIP: cite the later Waste Framework Directive/ECHA resource."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "threshold",
+        "threshold": "candidate_list_w_w_percent",
+        "fact_paths": [
+          "articleComponents[]",
+          "articleAssessment.placedOnEUMarket",
+          "articleAssessment.actorRole"
+        ]
+      }
     },
     {
       "id": "ART-014",
@@ -383,7 +498,61 @@
         "Candidate List membership is time-varying. Capture list date/source.",
         "2017 ECHA guidance is not legislation and predates SCIP.",
         "Check Annex XVII restrictions, product-specific rules, national obligations and other REACH provisions separately."
-      ]
+      ],
+      "machine": {
+        "runtime": "assessArticleObligations",
+        "mode": "gate",
+        "fact_paths": [
+          "articleAssessment.allComponentsChecked",
+          "articleAssessment.candidateListSnapshot",
+          "articleComponents[].substances[].evidenceIds"
+        ]
+      }
     }
-  ]
+  ],
+  "schema_version": 2,
+  "catalogue_role": "Canonical, versioned machine-facing source for article-obligation numeric predicates, provenance, and LLM retrieval. src/generated-article-knowledge.mjs is generated; src/rules.mjs remains the independent reviewed SDS decision implementation.",
+  "thresholds": {
+    "candidate_list_w_w_percent": {
+      "operator": ">",
+      "value": 0.1,
+      "unit": "percent_w_w",
+      "reference": "relevant constituent article or documented ECHA Table 5 scenario"
+    },
+    "article_7_tonnes_per_year": {
+      "operator": ">",
+      "value": 1,
+      "unit": "tonnes_per_actor_year",
+      "reference": "relevant qualifying articles for Article 7(2); all intended-release articles for Article 7(1)"
+    },
+    "article_33_consumer_response_days": {
+      "operator": "<=",
+      "value": 45,
+      "unit": "calendar_days"
+    },
+    "scip_first_effective_date": "2021-01-05"
+  },
+  "fact_bindings": {
+    "object_function": "classification.function",
+    "shape_surface_design_vs_chemistry": "classification.shapeDominates",
+    "separable_chemical": "classification.separableChemical",
+    "step4_delivery_indicators": "classification.q4a..q4c",
+    "step5_integral_indicators": "classification.q5a..q5c",
+    "step6_indicators": "classification.q6a..q6d",
+    "step6_reviewed_conclusion": "classification.step6Conclusion",
+    "step6_rationale": "classification.step6Rationale",
+    "product_type": "productType",
+    "legacy_candidate_list_present": "candidateListPresent",
+    "legacy_component_coverage": "allComponentsChecked",
+    "components": "articleComponents[]",
+    "components_all_reviewed": "articleAssessment.allComponentsChecked",
+    "candidate_list_snapshot": "articleAssessment.candidateListSnapshot",
+    "supplier_role": "articleAssessment.actorRole",
+    "eu_market": "articleAssessment.placedOnEUMarket",
+    "substance_identity": "articleComponents[].substances[].substanceId",
+    "substance_retained_mass": "articleComponents[].substances[].retainedMassGrams",
+    "amount_produced_per_year": "articleComponents[].annualUnits",
+    "registered_for_use": "articleComponents[].substances[].registeredForUse",
+    "exposure_excluded": "articleComponents[].substances[].exposureExcluded"
+  }
 }
