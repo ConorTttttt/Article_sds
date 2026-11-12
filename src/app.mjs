@@ -1,4 +1,5 @@
 import { assess, SOURCES, RULESET_VERSION } from "./rules.mjs";
+import { sha256Audit } from "./audit.mjs";
 
 const byId = id => document.getElementById(id);
 const value = id => byId(id)?.value ?? "unknown";
@@ -233,7 +234,7 @@ byId("resetForm").addEventListener("click", () => {
   visibility();
 });
 
-byId("downloadReport").addEventListener("click", () => {
+byId("downloadReport").addEventListener("click", async () => {
   if (!lastReport) return;
   const keys = [...new Set(["REACH_DEFINITION", "ECHA_ARTICLES", ...(lastReport.sds.rules ?? []), ...(lastReport.article33?.rules ?? []),
     ...(lastReport.article7_1 ? ["REACH_ART7_1"] : []),
@@ -244,6 +245,20 @@ byId("downloadReport").addEventListener("click", () => {
     sources: Object.fromEntries(keys.map(k => [k, SOURCES[k]]).filter(([, v]) => !!v)),
     evidenceNotice: "This record captures user assertions. Attach external evidence before regulatory sign-off."
   };
+  const digest = await sha256Audit(record);
+  if (digest) {
+    record.audit.integrity = {
+      algorithm: "SHA-256",
+      canonicalization: "sorted-json-keys-v1",
+      value: digest,
+      description: "Digest of the report before integrity metadata was added. Not a digital signature."
+    };
+  } else {
+    record.audit.integrity = {
+      algorithm: null,
+      description: "WebCrypto unavailable. No cryptographic integrity fingerprint was generated."
+    };
+  }
   const blob = new Blob([JSON.stringify(record, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
