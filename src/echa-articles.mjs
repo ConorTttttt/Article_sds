@@ -25,7 +25,7 @@ function majority(values) {
  * ECHA Article 3(3) classification decision support.
  *
  * Input keys: function, shapeDominates (yes/no/unknown), separableChemical,
- * q4a..q4c, q5a..q5c, q6a..q6d.
+ * q4a..q4c, q5a..q5c, q6a..q6d, step6Conclusion, step6Rationale and step6RelevantQuestionsReviewed.
  *
  * A clear answer at Step 2 avoids unnecessary indicative questions.
  * Subsequent answers are only used if Step 2 is genuinely inconclusive.
@@ -59,12 +59,26 @@ export function classifyObject(input = {}) {
     return review("ECHA step 5 cross-check is inconclusive. A competent review of the object and chemical functions is needed.", "5");
   }
 
-  const stage6 = majority([facts.q6a, facts.q6b, facts.q6c, facts.q6d]);
-  if (stage6 === "yes")
-    return state("ARTICLE", "The ECHA step 6 indications predominantly support an article, subject to the underlying Article 3(3) definition.", "6");
-  if (stage6 === "no")
-    return state("CHEMICAL", "The ECHA step 6 indications predominantly support a substance or mixture, subject to the underlying Article 3(3) definition.", "6");
-  return review("Step 6 cannot resolve whether physical design or chemical composition determines the object function. ECHA advises case-specific assessment.", "6");
+  // Unlike Step 4's explicit 2-of-3 indications, Step 6 does not prescribe
+  // equally-weighted votes: relevance and evidential weight vary case by case.
+  // Never promote a numerical majority into an automatic legal classification.
+  const indications = [facts.q6a, facts.q6b, facts.q6c, facts.q6d];
+  if (!indications.some(answered))
+    return review("Step 6 needs documented answers to the applicable indicative questions.", "6",
+      ["Record the relevant indicators and their evidence."]);
+  if (facts.step6RelevantQuestionsReviewed !== "yes")
+    return review("Step 6 requires confirmation that all relevant questions and their relative evidential weight were considered.", "6",
+      ["Review the relevance and weight of each Step 6 indicator."]);
+  const rationale = String(facts.step6Rationale ?? "").trim();
+  if (rationale.length < 20)
+    return review("Record a substantive evidence-based Step 6 rationale (at least 20 characters).", "6",
+      ["Explain why physical form or chemistry determines the function."]);
+  if (!["ARTICLE", "CHEMICAL"].includes(facts.step6Conclusion))
+    return review("Step 6 is advisory. A documented Article 3(3) conclusion is still needed.", "6",
+      ["Record a reviewed Article 3(3) conclusion based on the evidence."]);
+  return state(facts.step6Conclusion,
+    "Reviewed Step 6 judgement: " + rationale +
+    " The indicative answers support this documented Article 3(3) decision; they do not replace the legal definition.", "6");
 }
 
 /**
