@@ -1,5 +1,7 @@
 # EU Article Rules — LLM-optimised regulatory knowledge (v1)
 
+> **Source-of-truth note (v2):** This Markdown file is a readable companion, not the executable authority. Machine thresholds, field bindings and rule IDs are authored in [eu-articles-llm-rules.json](./eu-articles-llm-rules.json) and compiled into `src/generated-article-knowledge.mjs`; CI detects compilation drift. Article 31 SDS remains governed by the separately reviewed `src/rules.mjs`. ECHA indicative Step 6 questions now require a documented reviewer judgement rather than automated majority voting.
+
 > **Use:** Retrieval and grounded explanation; NOT an autonomous legal decision engine. Generated from the user's ECHA `articles_en.PDF` (Version 4.0, June 2017), REACH provisions, and explicitly identified later law/guidance. The ECHA guidance itself says REACH law is the only authentic legal reference. Last reviewed **12 November 2026**. EU/EEA scope only.
 
 ## Operating contract for an LLM
