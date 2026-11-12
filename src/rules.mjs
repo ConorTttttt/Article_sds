@@ -87,6 +87,7 @@ function applyPublicException(facts, base) {
   if (suppliedToPublic === "no") return base;
   if (suppliedToPublic === "yes") {
     const adequate = tri(facts.publicInformationSufficient);
+    if (adequate === "no") return base;
     if (adequate === "yes" && downstreamRequest === "no")
       return decision("NOT_REQUIRED_FOR_THIS_SUPPLY", "SDS not automatically supplied in this transaction",
         "A substance or mixture offered/sold to the general public has sufficient safe-use information and no downstream-user/distributor request. The underlying hazard-based SDS obligation is not erased.", [...base.rules, "REACH_31_4"]);
@@ -143,6 +144,8 @@ export function assess(raw = {}) {
 
   if (kind === "article") {
     articleInformation = article33(facts);
+    if (tri(facts.pyrotechnicVehicle) === "yes" && tri(facts.separateChemicalPayload) !== "no")
+      related.push("Any separately supplied substance/mixture in this vehicle pyrotechnic product needs its own SDS assessment as well.");
     if (tri(facts.intendedRelease) === "yes")
       related.push("Intended substance release from an article may create a separate REACH Article 7 registration check; it does not by itself create a REACH Article 31 SDS duty.");
     const pyro = tri(facts.pyrotechnicVehicle);
@@ -214,6 +217,8 @@ export function assess(raw = {}) {
       "First classify the item under REACH as an article, substance, mixture or combination.", ["REACH_DEFINITION"]);
   }
 
+  if (["substance", "mixture"].includes(kind) && sds.status !== "REQUIRED")
+    related.push("REACH Article 32 may still require supply-chain information when an SDS is not provided; this assessment does not determine Article 32 compliance.");
   return {
     rulesetVersion: RULESET_VERSION,
     lawAsOf: LAW_AS_OF,
