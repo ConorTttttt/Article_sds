@@ -59,6 +59,16 @@ function addIngredient() {
 byId("addIngredient").addEventListener("click", addIngredient);
 addIngredient();
 
+const echaKeys = ["function", "shapeDominates", "separableChemical",
+  "q4a", "q4b", "q4c", "q5a", "q5b", "q5c", "q6a", "q6b", "q6c", "q6d"];
+const echaFields = ["objectFunction", ...echaKeys.slice(1)];
+function majority(arr) {
+  const count = val => arr.filter(x => x === val).length;
+  if (count("yes") > arr.length / 2) return "yes";
+  if (count("no") > arr.length / 2) return "no";
+  return "unknown";
+}
+
 function visibility() {
   const kind = value("productType");
   byId("articleFields").hidden = kind !== "article";
@@ -66,6 +76,14 @@ function visibility() {
   byId("substanceFields").hidden = kind !== "substance";
   byId("mixtureFields").hidden = kind !== "mixture";
   byId("professionalFields").hidden = value("pyrotechnicVehicle") !== "yes";
+  const deep = value("shapeDominates") === "unknown";
+  const sep = value("separableChemical");
+  byId("classificationFollowup").hidden = !deep;
+  byId("echaStep4").hidden = !(deep && sep === "yes");
+  byId("echaStep5").hidden = !(deep && sep === "yes" && majority(["q4a", "q4b", "q4c"].map(value)) === "no");
+  byId("echaStep6").hidden = !(deep && sep === "no");
+  byId("svhcManual").hidden = value("svhcConcentrationMode") !== "manual";
+  byId("svhcMass").hidden = value("svhcConcentrationMode") !== "mass";
 }
 form.addEventListener("change", visibility);
 visibility();
@@ -75,11 +93,14 @@ const attrs = ["productType", "pyrotechnicVehicle", "professionalRecipient",
   "maxComponentSvhcPercent", "allComponentsChecked", "clpLabellingDerogation", "clpHazardous",
   "pbtOrVpVb", "substanceCandidateList", "mixturePhysical",
   "allMixtureIngredientsChecked", "offeredToPublic", "publicInformationSufficient",
-  "downstreamRequest"];
+  "downstreamRequest", "svhcConcentrationMode", "svhcBasis", "svhcMassGrams", "referenceMassGrams"];
 
 function collect() {
   const facts = {};
   for (const id of attrs) facts[id] = value(id);
+  facts.classification = {};
+  for (let i = 0; i < echaKeys.length; i++)
+    facts.classification[echaKeys[i]] = value(echaFields[i]);
   facts.ingredients = [...document.querySelectorAll(".ingredient-row")].map(row => ({
     name: row.querySelector(".ingredient-name").value.trim(),
     percent: row.querySelector(".ingredient-percent").value,
@@ -98,7 +119,10 @@ const statusNames = {
   NOT_REQUIRED: "Not required under assessed rules",
   REQUIRED_ON_REQUEST: "Required on request",
   NOT_REQUIRED_FOR_THIS_SUPPLY: "Not automatically required for this supply",
-  REVIEW_REQUIRED: "Further assessment needed"
+  REVIEW_REQUIRED: "Further assessment needed",
+  ARTICLE: "Article",
+  CHEMICAL: "Substance / mixture",
+  COMBINATION: "Combination product"
 };
 
 function reportCard(title, data) {
@@ -121,6 +145,12 @@ function reportCard(title, data) {
 function render(report) {
   const target = byId("resultBody");
   target.replaceChildren();
+  target.append(reportCard("ECHA product classification", {
+    status: report.classification.status,
+    title: report.classification.status === "REVIEW_REQUIRED" ? "Classification not established" : "Classification evidence recorded",
+    detail: report.classification.explanation + " (ECHA Figure 2, step " + report.classification.step + ")",
+    next: report.classification.next ?? []
+  }));
   target.append(reportCard("SDS legal requirement", report.sds));
   if (report.article33) target.append(reportCard("Separate Article 33 information duty", report.article33));
 
@@ -131,7 +161,7 @@ function render(report) {
     target.append(related);
   }
 
-  const keys = [...new Set([...(report.sds.rules ?? []), ...(report.article33?.rules ?? [])])];
+  const keys = [...new Set(["REACH_DEFINITION", "ECHA_ARTICLES", ...(report.sds.rules ?? []), ...(report.article33?.rules ?? [])])];
   const sources = el("section", "citations");
   sources.append(el("h3", "", "Rules applied and legal sources"));
   if (!keys.length) sources.append(el("p", "", "No substantive rule could yet be applied."));
@@ -177,7 +207,7 @@ byId("resetForm").addEventListener("click", () => {
 
 byId("downloadReport").addEventListener("click", () => {
   if (!lastReport) return;
-  const keys = [...new Set([...(lastReport.sds.rules ?? []), ...(lastReport.article33?.rules ?? [])])];
+  const keys = [...new Set(["REACH_DEFINITION", "ECHA_ARTICLES", ...(lastReport.sds.rules ?? []), ...(lastReport.article33?.rules ?? [])])];
   const record = {
     ...lastReport,
     sources: Object.fromEntries(keys.map(k => [k, SOURCES[k]]).filter(([, v]) => !!v)),
