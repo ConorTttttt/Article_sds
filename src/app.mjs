@@ -60,7 +60,7 @@ byId("addIngredient").addEventListener("click", addIngredient);
 addIngredient();
 
 const echaKeys = ["function", "shapeDominates", "separableChemical",
-  "q4a", "q4b", "q4c", "q5a", "q5b", "q5c", "q6a", "q6b", "q6c", "q6d"];
+  "q4a", "q4b", "q4c", "q5a", "q5b", "q5c", "q6a", "q6b", "q6c", "q6d", "step6RelevantQuestionsReviewed", "step6Conclusion", "step6Rationale"];
 const echaFields = ["objectFunction", ...echaKeys.slice(1)];
 function majority(arr) {
   const count = val => arr.filter(x => x === val).length;
