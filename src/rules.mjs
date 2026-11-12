@@ -4,8 +4,9 @@
  * Ruleset version is pinned; update only after legal review and regression tests.
  */
 import { classifyObject, svhcConcentration } from "./echa-articles.mjs";
+import { assessArticleObligations, ARTICLE_MODEL_VERSION } from "./article-obligations.mjs";
 
-export const RULESET_VERSION = "eu-sds-2026-11-v2-echa2017";
+export const RULESET_VERSION = "eu-sds-2026-11-v3-article-obligations";
 export const LAW_AS_OF = "2026-11-12";
 export const SOURCES = Object.freeze({
   REACH_DEFINITION: {
@@ -47,6 +48,21 @@ export const SOURCES = Object.freeze({
     name: "CLP Annex I (ED category 2 mixture notes)",
     url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R0707",
     description: "Certain category 2 endocrine disruptors at 0.1% in mixtures trigger SDS availability upon request."
+  },
+  REACH_ART7_1: {
+    name: "REACH Article 7(1), Article 7(6)",
+    url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02006R1907-20260622",
+    description: "Registration screening for substances intended to be released from articles."
+  },
+  REACH_ART7_2: {
+    name: "REACH Article 7(2), Article 7(3), Article 7(6)",
+    url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02006R1907-20260622",
+    description: "Candidate List notification screening, actor quantities, exclusions and exemptions."
+  },
+  ECHA_SCIP: {
+    name: "Waste Framework Directive / ECHA SCIP",
+    url: "https://echa.europa.eu/scip-suppliers-of-articles",
+    description: "SCIP information duty for qualifying articles placed on the EU market since 5 January 2021."
   },
   ECHA_ARTICLES: {
     name: "ECHA Guidance on requirements for substances in articles, Version 4.0, June 2017",
@@ -154,9 +170,15 @@ export function assess(raw = {}) {
   const related = [];
   let sds;
   let articleInformation = null;
+  let extended = null;
+  const advanced = kind === "article" && (facts.articleComponents !== undefined ||
+    facts.articleAssessment !== undefined || facts.articleDataError);
+  if (advanced) {
+    extended = assessArticleObligations(facts);
+  }
 
   if (kind === "article") {
-    articleInformation = article33(facts);
+    articleInformation = extended ? extended.article33 : article33(facts);
     if (tri(facts.pyrotechnicVehicle) === "yes" && tri(facts.separateChemicalPayload) !== "no")
       related.push("Any separately supplied substance/mixture in this vehicle pyrotechnic product needs its own SDS assessment as well.");
     if (tri(facts.intendedRelease) === "yes")
@@ -251,18 +273,43 @@ export function assess(raw = {}) {
       classification.explanation + " An SDS conclusion must wait for defensible classification.",
       ["REACH_DEFINITION", "ECHA_ARTICLES"],
       classification.next ?? []);
-    if (kind === "article") articleInformation = decision("REVIEW_REQUIRED",
-      "Article 33 depends on confirming the product is an article",
-      "The declared article classification is unconfirmed or contradicted by the guided assessment.",
-      ["REACH_DEFINITION", "ECHA_ARTICLES"]);
+    if (kind === "article") {
+      articleInformation = decision("REVIEW_REQUIRED",
+        "Article 33 depends on confirming the product is an article",
+        "The declared article classification is unconfirmed or contradicted by the guided assessment.",
+        ["REACH_DEFINITION", "ECHA_ARTICLES"]);
+      if (extended) {
+        for (const branch of ["article7_1", "article7_2", "scip"])
+          extended[branch] = decision("REVIEW_REQUIRED", "Article classification must be resolved",
+            "Separate article obligations cannot be finalised until the item is defensibly classified.",
+            ["REACH_DEFINITION", "ECHA_ARTICLES"]);
+      }
+    }
   }
   return {
     classification,
     rulesetVersion: RULESET_VERSION,
     lawAsOf: LAW_AS_OF,
+    articleKnowledgeVersion: ARTICLE_MODEL_VERSION,
     scope: "EU REACH / Directive 2013/29/EU; input-based screening, not legal certification.",
     sds,
     article33: articleInformation,
+    article7_1: extended?.article7_1 ?? null,
+    article7_2: extended?.article7_2 ?? null,
+    scip: extended?.scip ?? null,
+    componentChecks: extended?.components ?? [],
+    missingEvidence: [...new Set([...(extended?.missingEvidence ?? []),
+      ...(facts.articleDataError ? [facts.articleDataError] : [])])],
+    datasetSnapshot: extended?.candidateListSnapshot ?? null,
+    audit: {
+      assessmentSchema: "eu-article-audit-v1",
+      ruleSet: RULESET_VERSION,
+      knowledgeVersion: ARTICLE_MODEL_VERSION,
+      legalBaseline: LAW_AS_OF,
+      evidenceRegister: Array.isArray(facts.articleAssessment?.evidenceRegister) ? facts.articleAssessment.evidenceRegister : [],
+      review: facts.articleAssessment?.review ?? null,
+      notes: "Inputs and evidence identifiers are user assertions, not independently verified documents."
+    },
     related,
     inputs: JSON.parse(JSON.stringify(facts))
   };
