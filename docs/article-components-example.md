@@ -24,7 +24,13 @@ The advanced editor accepts a JSON object with two properties: `articleComponent
           "registeredForUse": "unknown",
           "exposureExcluded": "unknown",
           "recipientInstructionsProvided": "unknown",
-          "preListingOnly": "unknown"
+          "preListingOnly": "unknown",
+          "registrationEvidenceId": "",
+          "registeredUseDescription": "",
+          "exposureEvidenceId": "",
+          "preListingEvidenceId": "",
+          "listingDate": "",
+          "latestProductionImportDate": ""
         }
       ]
     }
@@ -58,9 +64,9 @@ The advanced editor accepts a JSON object with two properties: `articleComponent
 - **Substances:** each `substanceId` must identify the same chemical across relevant article records. Group-entry or salt interpretations require expert confirmation; absence of a CAS number from a simple lookup is **not** evidence of absence from the Candidate List.
 - **Mass and reference basis:** `retainedMassGrams` is the mass remaining in the supplied article. A `referenceBasis` of `joining_or_coating_complex_object` requires `referenceMassGrams`, `incorporationStage: "joined_or_coated_assembled_object"`, and a nonempty `referenceEvidenceId` explaining the ECHA Table 5 denominator.
 - **Annual quantity:** `annualUnits` is the number of each specific article/component made/imported by the assessed actor per year. Totals for the same substance are aggregated for Article 7, but not for Article 33's concentration threshold. Ensure quantities do not double-count one constituent across multiple BOM representations.
-- **Article 7(2) exemptions:** `registeredForUse` must cover the actual use in the article; `exposureExcluded` requires life-cycle evidence and `recipientInstructionsProvided`. `preListingOnly` documents articles exclusively manufactured/imported before Candidate List inclusion. Mixed or uncertain exemptions require review.
+- **Article 7(2) exemptions:** `registeredForUse` must cover the actual use, supported by `registrationEvidenceId` and `registeredUseDescription`. `exposureExcluded` requires `exposureEvidenceId` covering normal and reasonably foreseeable use, disposal, and `recipientInstructionsProvided: "yes"`. `preListingOnly` requires the relevant `listingDate`, `latestProductionImportDate` strictly before inclusion, and `preListingEvidenceId`. Mixed or uncertain exemptions require review.
 - **Article 7(1):** `intendedRelease` is a substance-by-substance, normal/foreseeable-use fact. Total relevant substance mass, not just released amount, counts against the quantity trigger.
-- **SCIP:** EU supply/actor scope is separately assessed. This module does **not** prepare a SCIP dossier or decide all supply-chain special cases.
+- **EU supply and SCIP:** Article 33 and SCIP require an assessed EU supply/market context. SCIP actor scope is separately assessed. This module does **not** prepare a SCIP dossier or decide all supply-chain special cases.
 - **Candidate List:** a dated `candidateListSnapshot` is a **user assertion** backed by an evidence ID. The offline application cannot authenticate the supplied dataset or determine whether a substance belongs to a group entry. Missing or stale metadata prevents negative Article 33/SCIP/7(2) assessments.
 - **Audit:** downloaded records include facts, rule versions, evidence identifiers, open questions, and (when WebCrypto is available) a SHA-256 fingerprint of the report. That fingerprint is not a signature or regulatory approval.
 
