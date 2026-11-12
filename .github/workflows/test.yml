@@ -13,6 +13,4 @@ jobs:
         with:
           node-version: "22"
       - name: Unit and boundary regression tests
-        run: node --test tests/*.test.mjs
-      - name: Browser module syntax
-        run: node --check src/app.mjs && node --check src/rules.mjs && node --check src/echa-articles.mjs
+        run: npm run check
